@@ -355,7 +355,7 @@ function loop() {
     }
     context.globalAlpha = 1.0;
 
-let fallDelay = 45;
+let fallDelay = 50;
 if (speedMode) {
   fallDelay = Math.max(5, 90 - Math.floor(score / 100));
 }
