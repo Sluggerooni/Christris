@@ -55,6 +55,8 @@ function createColorPickers() {
     input.setAttribute('data-name', name);
     input.value = rgbToHex(colors[name]);
 
+localStorage.setItem('customColors', JSON.stringify(colors));
+
     input.addEventListener('input', () => {
       colors[name] = input.value;
       isUnifiedWhite = false;
@@ -127,18 +129,6 @@ function generateSequence() {
   }
 }
 
-
-
-
-// Utility to convert RGB to hex
-function rgbToHex(rgb) {
-  const ctx = document.createElement('canvas').getContext('2d');
-  ctx.fillStyle = rgb;
-  const computed = ctx.fillStyle; // returns rgb(r, g, b)
-  const rgbArr = computed.match(/\d+/g);
-  return `#${rgbArr.map(x => (+x).toString(16).padStart(2, '0')).join('')}`;
-}
-
 function getNextTetromino() {
   if (tetrominoSequence.length === 0) generateSequence();
   const name = tetrominoSequence.pop();
@@ -184,11 +174,13 @@ function placeTetromino() {
   for (let row = playfield.length - 1; row >= 0;) {
     if (playfield[row].every(cell => !!cell)) {
       linesCleared++;
-      for (let r = row; r >= 0; r--) {
-        for (let c = 0; c < playfield[r].length; c++) {
-          playfield[r][c] = playfield[r-1][c];
-        }
-      }
+      for (let r = row; r > 0; r--) {
+  for (let c = 0; c < playfield[r].length; c++) {
+    playfield[r][c] = playfield[r - 1][c];
+  }
+}
+// Clear top row explicitly:
+playfield[0].fill(0);
     } else row--;
   }
 
@@ -350,11 +342,6 @@ if (++count > fallDelay) {
 }
 
 document.addEventListener('keydown', function(e) {
-  if (e.code === 'Escape') {
-    paused = !paused;
-    pauseMenu.classList.toggle('hidden', !paused);
-    return;
-  }
   
 if (e.code === 'Escape') {
   paused = !paused;
@@ -391,7 +378,8 @@ if (e.code === 'Escape') {
       [tetromino, hold] = [hold, tetromino];
     }
     tetromino.row = tetromino.name === 'I' ? -1 : -2;
-    tetromino.col = playfield[0].length / 2 - Math.ceil(tetromino.matrix[0].length / 2);
+tetromino.col = Math.floor(playfield[0].length / 2 - Math.ceil(tetromino.matrix[0].length / 2));
+
     heldThisTurn = true;
     updateHoldDisplay();
     updatePreview();

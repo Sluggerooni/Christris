@@ -70,6 +70,7 @@ button:hover{
   border: 3px solid white;
   margin: 20px;
   height: 300px;
+  width: 144px;
 }
 
 #info p {
