@@ -46,18 +46,6 @@ canvas {
   order: 1;
 }
 
-#info {
-  background: rgb(14, 14, 14);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-around;
-  flex-direction: column;
-  border: 3px solid white;
-  margin: 20px;
-  height: 300px;
-  width: 150px;
-}
-
 #info p {
   font-size: 20px;
   margin-left: 10px;
@@ -76,32 +64,9 @@ p {
   font-family: Georgia, serif;
 }
 
-#hold canvas, #next canvas {
-  display: block;
-  margin: auto;
-  height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0px solid white;
-  margin: 20px;
-  height: 150px;
-  width: 150px;
-  transform: translate(20%,30%);
-}
-
-
 button:hover{
   background-color: white;
   color:rgb(0, 0, 0)
-}
-
-#next {
-  order: 3;
-}
-
-#hold {
-  order: 1;
 }
 
 #info {
