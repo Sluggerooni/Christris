@@ -218,6 +218,47 @@ function showGameOver() {
   context.font = '36px monospace';
   context.textAlign = 'center';
   context.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2);
+
+  // Create restart button
+  const restartBtn = document.createElement('button');
+  restartBtn.textContent = 'Restart';
+  restartBtn.id = 'restart-button';
+  restartBtn.style.position = 'absolute';
+  restartBtn.style.left = `${canvas.offsetLeft + canvas.width / 2 - 60}px`;
+  restartBtn.style.top = `${canvas.offsetTop + canvas.height / 2 + 40}px`;
+
+
+  document.body.appendChild(restartBtn);
+
+  restartBtn.addEventListener('click', () => {
+    document.body.removeChild(restartBtn);
+    resetGame();
+  });
+}
+
+function resetGame() {
+  // Clear playfield
+  for (let row = -2; row < 20; row++) {
+    playfield[row] = [];
+    for (let col = 0; col < 10; col++) {
+      playfield[row][col] = 0;
+    }
+  }
+
+  // Reset game state
+  tetrominoSequence.length = 0;
+  tetromino = getNextTetromino();
+  nextTetromino = getNextTetromino();
+  hold = null;
+  heldThisTurn = false;
+  score = 0;
+  combo = 0;
+  lineCount = 0;
+  gameOver = false;
+  updateInfo();
+  updatePreview();
+  updateHoldDisplay();
+  rAF = requestAnimationFrame(loop);
 }
 
 function updatePreview() {
@@ -314,7 +355,7 @@ function loop() {
     }
     context.globalAlpha = 1.0;
 
-let fallDelay = 90;
+let fallDelay = 45;
 if (speedMode) {
   fallDelay = Math.max(5, 90 - Math.floor(score / 100));
 }
@@ -446,5 +487,3 @@ speedToggle.addEventListener('change', () => {
   speedMode = speedToggle.checked;
   localStorage.setItem('speedMode', speedMode);
 });
-
-
