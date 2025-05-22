@@ -4,11 +4,100 @@ const grid = 32;
 const tetrominoSequence = [];
 const playfield = [];
 let paused = false;
+const pauseMenu = document.getElementById('pause-menu');
+const toggleHold = document.getElementById('toggle-hold');
+const toggleNext = document.getElementById('toggle-next');
+const toggleInfo = document.getElementById('toggle-info');
 
-const colors = {
-  'I': 'cyan', 'O': 'yellow', 'T': 'purple',
-  'S': 'green', 'Z': 'red', 'J': 'blue', 'L': 'orange'
+toggleHold.addEventListener('change', () => {
+  document.getElementById('hold').style.display = toggleHold.checked ? 'flex' : 'none';
+});
+toggleNext.addEventListener('change', () => {
+  document.getElementById('next').style.display = toggleNext.checked ? 'flex' : 'none';
+});
+toggleInfo.addEventListener('change', () => {
+  document.getElementById('info').style.display = toggleInfo.checked ? 'flex' : 'none';
+});
+
+// Store default and working color sets
+const defaultColors = {
+  'I': 'Cyan',
+  'O': 'Gold',
+  'T': 'BlueViolet',
+  'S': 'LawnGreen',
+  'Z': 'Red',
+  'J': 'DodgerBlue',
+  'L': 'Orange',
 };
+let colors = { ...defaultColors };
+let isUnifiedWhite = false;
+
+// Utility: Convert color names to hex
+function rgbToHex(colorName) {
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.fillStyle = colorName;
+  return ctx.fillStyle;
+}
+
+// Color Picker Generator
+function createColorPickers() {
+  const container = document.getElementById('color-pickers');
+  if (!container) return;
+  container.innerHTML = '';
+
+  for (const name in colors) {
+    const label = document.createElement('label');
+    label.textContent = `${name}: `;
+    label.style.marginRight = '10px';
+
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.setAttribute('data-name', name);
+    input.value = rgbToHex(colors[name]);
+
+    input.addEventListener('input', () => {
+      colors[name] = input.value;
+      isUnifiedWhite = false;
+      unifyButton.textContent = 'Set All Colors to White';
+    });
+
+    label.appendChild(input);
+    container.appendChild(label);
+  }
+
+  const savedColors = localStorage.getItem('customColors');
+if (savedColors) {
+  colors = JSON.parse(savedColors);
+  isUnifiedWhite = Object.values(colors).every(c => c.toLowerCase() === '#ffffff');
+}
+
+}
+
+// Unify Colors Button Logic
+const unifyButton = document.getElementById('unify-colors');
+if (unifyButton) {
+  unifyButton.addEventListener('click', () => {
+    if (!isUnifiedWhite) {
+      // Set all to white
+      for (const key in colors) colors[key] = '#FFFFFF';
+      unifyButton.textContent = 'Set All Colors to Default';
+    } else {
+      // Restore original
+      for (const key in colors) colors[key] = defaultColors[key];
+      unifyButton.textContent = 'Set All Colors to White';
+    }
+
+    // Update color pickers
+    const inputs = document.querySelectorAll('#color-pickers input[type="color"]');
+    inputs.forEach(input => {
+      const name = input.getAttribute('data-name');
+      input.value = rgbToHex(colors[name]);
+    });
+
+    isUnifiedWhite = !isUnifiedWhite;
+  });
+  
+}
 
 for (let row = -2; row < 20; row++) {
   playfield[row] = [];
@@ -36,6 +125,18 @@ function generateSequence() {
     const name = sequence.splice(rand, 1)[0];
     tetrominoSequence.push(name);
   }
+}
+
+
+
+
+// Utility to convert RGB to hex
+function rgbToHex(rgb) {
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.fillStyle = rgb;
+  const computed = ctx.fillStyle; // returns rgb(r, g, b)
+  const rgbArr = computed.match(/\d+/g);
+  return `#${rgbArr.map(x => (+x).toString(16).padStart(2, '0')).join('')}`;
 }
 
 function getNextTetromino() {
@@ -100,8 +201,8 @@ function placeTetromino() {
   }
 
   updateInfo();
-  tetromino = heldThisTurn ? getNextTetromino() : nextTetromino;
-  nextTetromino = getNextTetromino();
+tetromino = nextTetromino;
+nextTetromino = getNextTetromino();
   heldThisTurn = false;
   updatePreview();
 }
@@ -192,21 +293,9 @@ updatePreview();
 function loop() {
   rAF = requestAnimationFrame(loop);
   if (paused || gameOver) return;
-  
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  if (paused) {
-    context.fillStyle = 'black';
-    context.globalAlpha = 0.75;
-    context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
-    context.globalAlpha = 1;
-    context.fillStyle = 'white';
-    context.font = '36px monospace';
-    context.textAlign = 'center';
-    context.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
-    return;
-  }
 
-  if (gameOver) return;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
   // Draw placed blocks
   for (let row = 0; row < 20; row++) {
     for (let col = 0; col < 10; col++) {
@@ -219,72 +308,61 @@ function loop() {
   }
 
   if (tetromino) {
-
     let ghostRow = tetromino.row;
-    while (isValidMove(tetromino.matrix, ghostRow + 1, tetromino.col)) {
-      ghostRow++;
-    }
+    while (isValidMove(tetromino.matrix, ghostRow + 1, tetromino.col)) ghostRow++;
 
-    context.globalAlpha = 0.3; 
+    context.globalAlpha = 0.3;
     context.fillStyle = colors[tetromino.name];
     for (let row = 0; row < tetromino.matrix.length; row++) {
       for (let col = 0; col < tetromino.matrix[row].length; col++) {
         if (tetromino.matrix[row][col]) {
-          context.fillRect(
-            (tetromino.col + col) * grid,
-            (ghostRow + row) * grid,
-            grid - 1,
-            grid - 1
-          );
+          context.fillRect((tetromino.col + col) * grid, (ghostRow + row) * grid, grid - 1, grid - 1);
         }
       }
     }
-    context.globalAlpha = 1.0; 
+    context.globalAlpha = 1.0;
 
-    if (++count > 60) {
-      tetromino.row++;
-      count = 0;
+let fallDelay = 90;
+if (speedMode) {
+  fallDelay = Math.max(5, 90 - Math.floor(score / 100));
+}
 
-      if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
-        tetromino.row--;
-        placeTetromino();
-      }
-    }
+if (++count > fallDelay) {
+  tetromino.row++;
+  count = 0;
+  if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
+    tetromino.row--;
+    placeTetromino();
+  }
+}
+
+
 
     context.fillStyle = colors[tetromino.name];
     for (let row = 0; row < tetromino.matrix.length; row++) {
       for (let col = 0; col < tetromino.matrix[row].length; col++) {
         if (tetromino.matrix[row][col]) {
-          context.fillRect(
-            (tetromino.col + col) * grid,
-            (tetromino.row + row) * grid,
-            grid - 1,
-            grid - 1
-          );
+          context.fillRect((tetromino.col + col) * grid, (tetromino.row + row) * grid, grid - 1, grid - 1);
         }
       }
     }
   }
 }
 
-
 document.addEventListener('keydown', function(e) {
   if (e.code === 'Escape') {
+    paused = !paused;
+    pauseMenu.classList.toggle('hidden', !paused);
+    return;
+  }
+  
+if (e.code === 'Escape') {
   paused = !paused;
-  if (paused) {
-  context.fillStyle = 'black';
-  context.globalAlpha = 0.75;
-  context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
-  context.globalAlpha = 1;
-  context.fillStyle = 'white';
-  context.font = '36px monospace';
-  context.textAlign = 'center';
-  context.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+  pauseMenu.classList.toggle('hidden', !paused);
+  if (paused) createColorPickers();
   return;
 }
-  return;
-}
-  if (gameOver) return;
+  if (gameOver || paused) return;
 
   if (e.which === 37 || e.which === 39) {
     const col = e.which === 37 ? tetromino.col - 1 : tetromino.col + 1;
@@ -304,7 +382,7 @@ document.addEventListener('keydown', function(e) {
     } else tetromino.row = row;
   }
 
-if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !heldThisTurn) {
+  if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !heldThisTurn) {
     if (!hold) {
       hold = tetromino;
       tetromino = nextTetromino;
@@ -319,7 +397,7 @@ if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !heldThisTurn) {
     updatePreview();
   }
 
-  if (e.which === 32) { 
+  if (e.which === 32) {
     while (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
       tetromino.row++;
       score += 2;
@@ -327,6 +405,58 @@ if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !heldThisTurn) {
     placeTetromino();
     updateInfo();
   }
+
+});
+toggleHold.addEventListener('change', () => {
+  const value = toggleHold.checked;
+  document.getElementById('hold').style.display = value ? 'flex' : 'none';
+  localStorage.setItem('showHold', value);
+});
+
+toggleNext.addEventListener('change', () => {
+  const value = toggleNext.checked;
+  document.getElementById('next').style.display = value ? 'flex' : 'none';
+  localStorage.setItem('showNext', value);
+});
+
+toggleInfo.addEventListener('change', () => {
+  const value = toggleInfo.checked;
+  document.getElementById('info').style.display = value ? 'flex' : 'none';
+  localStorage.setItem('showInfo', value);
+});
+
+window.addEventListener('load', () => {
+  const holdVisible = localStorage.getItem('showHold') === 'true';
+  const nextVisible = localStorage.getItem('showNext') === 'true';
+  const infoVisible = localStorage.getItem('showInfo') === 'true';
+
+  toggleHold.checked = holdVisible;
+  toggleNext.checked = nextVisible;
+  toggleInfo.checked = infoVisible;
+
+  document.getElementById('hold').style.display = holdVisible ? 'flex' : 'none';
+  document.getElementById('next').style.display = nextVisible ? 'flex' : 'none';
+  document.getElementById('info').style.display = infoVisible ? 'flex' : 'none';
+
+
 });
 
 rAF = requestAnimationFrame(loop);
+
+
+let speedMode = false;
+const speedToggle = document.getElementById('speed-mode-toggle');
+
+window.addEventListener('load', () => {
+  // ...existing code
+  const savedSpeedMode = localStorage.getItem('speedMode') === 'true';
+  speedToggle.checked = savedSpeedMode;
+  speedMode = savedSpeedMode;
+});
+
+speedToggle.addEventListener('change', () => {
+  speedMode = speedToggle.checked;
+  localStorage.setItem('speedMode', speedMode);
+});
+
+

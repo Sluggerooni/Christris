@@ -10,12 +10,27 @@
 
 <body>
     <div id="containers">
+        <div id="pause-menu" class="hidden">
+  <h2>Paused</h2>
+  <p>Display Options</p>
+  <label><input type="checkbox" id="toggle-hold" checked> Show Hold</label>
+  <label><input type="checkbox" id="toggle-next" checked> Show Next</label>
+  <label><input type="checkbox" id="toggle-info" checked> Show Info</label>
+   <hr>
+   <p>Game Modifiers</p>
+  <label>
+  <input type="checkbox" id="speed-mode-toggle" />
+  Speed Increases With Score
+</label>
+  <button id="unify-colors">Set All Colors to White</button>
+</div>
         <canvas width="320" height="640" id="game"></canvas>
 
         <div id="leftside">
             <div id="hold">
 
             </div>
+
         </div>
 
         <div id="rightside">
@@ -29,6 +44,7 @@
             </div>
 
         </div>
+
 
 
         <script src="script.js"></script>
