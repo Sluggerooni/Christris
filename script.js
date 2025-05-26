@@ -19,7 +19,9 @@ toggleNext.addEventListener('change', () => {
 toggleInfo.addEventListener('change', () => {
   document.getElementById('info').style.display = toggleInfo.checked ? 'flex' : 'none';
 });
-
+toggleHold.checked = true;
+toggleNext.checked = true;
+toggleInfo.checked = true;
 
 function shakeCanvas(direction) {
   const container = document.getElementById('game-container');
@@ -570,13 +572,3 @@ function isCollidingWithWall(matrix, cellRow, cellCol) {
   }
   return false;
 }
-
-// Set toggles to default ON
-toggleHold.checked = true;
-toggleNext.checked = true;
-toggleInfo.checked = true;
-
-// Ensure their corresponding UI elements are visible
-document.getElementById('hold').style.display = 'flex';
-document.getElementById('next').style.display = 'flex';
-document.getElementById('info').style.display = 'flex';
