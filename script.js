@@ -9,6 +9,7 @@ const toggleHold = document.getElementById('toggle-hold');
 const toggleNext = document.getElementById('toggle-next');
 const toggleInfo = document.getElementById('toggle-info');
 
+
 toggleHold.addEventListener('change', () => {
   document.getElementById('hold').style.display = toggleHold.checked ? 'flex' : 'none';
 });
@@ -427,12 +428,24 @@ document.addEventListener('keydown', function (e) {
     }
   }
 
-  if (e.which === 38) {
-    const rotated = rotate(tetromino.matrix);
-    if (isValidMove(rotated, tetromino.row, tetromino.col)) {
-      tetromino.matrix = rotated;
+if (e.which === 38) {
+  const rotated = rotate(tetromino.matrix);
+  if (isValidMove(rotated, tetromino.row, tetromino.col)) {
+    tetromino.matrix = rotated;
+  } else {
+    // Try simple wall kicks (left and right)
+    const kicks = [-1, 1, -2, 2]; // Test offsets from current col
+    for (let i = 0; i < kicks.length; i++) {
+      const newCol = tetromino.col + kicks[i];
+      if (isValidMove(rotated, tetromino.row, newCol)) {
+        tetromino.col = newCol;
+        tetromino.matrix = rotated;
+        break;
+      }
     }
   }
+}
+
 
   if (e.which === 40) {
     const row = tetromino.row + 1;
@@ -557,3 +570,13 @@ function isCollidingWithWall(matrix, cellRow, cellCol) {
   }
   return false;
 }
+
+// Set toggles to default ON
+toggleHold.checked = true;
+toggleNext.checked = true;
+toggleInfo.checked = true;
+
+// Ensure their corresponding UI elements are visible
+document.getElementById('hold').style.display = 'flex';
+document.getElementById('next').style.display = 'flex';
+document.getElementById('info').style.display = 'flex';
