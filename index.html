@@ -12,19 +12,27 @@
     <div id="containers">
         <div id="pause-menu" class="hidden">
   <h2>Paused</h2>
-  <p class="header">Display Options</p>
+  <p class="header">Options</p>
   <label><input type="checkbox" id="toggle-hold" checked> Show Hold</label>
   <label><input type="checkbox" id="toggle-next" checked> Show Next</label>
   <label><input type="checkbox" id="toggle-info" checked> Show Info</label>
+<label>
+  <input type="checkbox" id="toggle-music" checked>
+  Play Music
+</label>
+<label>
+  <input type="checkbox" id="toggle-shake" checked>
+  Matrix Bounce
+</label>
    <hr>
    <p class="header">High Scores</p>
  <div id="pause-highs"></div>
- <button onclick="resetHighStats()">Reset Stats</button>
+ <button class="reset" onclick="resetHighStats()">Reset Stats</button>
    <hr>
    <p class="header">Game Modifiers</p>
   <label class="speed-mode-toggle">
   <input type="checkbox" id="speed-mode-toggle" />
-  Speed Doesn't Increases With Score
+  No Speed Increase
 </label>
   <button id="unify-colors">Set All Colors to White</button>
 </div>

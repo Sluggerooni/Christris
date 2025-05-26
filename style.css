@@ -93,8 +93,8 @@ p {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #111;
-  border: 3px solid white;
+  background: #0e0e0ec7;
+  border: 2px solid #555;
   color: white;
   padding: 30px;
   font-family: monospace;
@@ -115,20 +115,25 @@ p {
 }
 
 #unify-colors {
-  border: 3px solid white;
-  background-color: #111;
-  color: white;
+  background-color: #222;
+  color: rgb(255, 255, 255);
+  padding: 4px 7px;
+  cursor: pointer;
+  cursor: pointer;
+  border: 2px solid #555;
+  border-radius: 6px;
 }
 
 #unify-colors:hover {
-  color: black;
-  background-color: white;
+  background-color: rgb(17, 17, 17);
 }
 
 hr {
-  width: 100%;
-  border: 1px solid white;
+  transform: translate(-10.5%, 0%);
+  width: 126%;
+  border: 1px solid #555;
   margin-top: 20px;
+  margin-bottom: 7px;
 }
 
 #restart-button {
@@ -216,9 +221,24 @@ canvas#game {
 }
 
 .header {
-  font-size:15px
+  font-size: 17.6px
 }
 
 .speed-mode-toggle{
   margin-bottom: 15px;
+}
+
+.reset{
+  background-color: #222;
+  color: rgb(255, 255, 255);
+  padding: 4px 7px;
+  cursor: pointer;
+  cursor: pointer;
+  border: 2px solid #555;
+  border-radius: 6px;
+    margin-bottom: 10px;
+}
+.reset:hover {
+  background-color: rgb(17, 17, 17);
+  color: white;
 }

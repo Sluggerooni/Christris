@@ -14,6 +14,15 @@ let isClearing = false;
 let hardDropped = false;
 let lastCollisionSoundTime = 0;
 const collisionSoundCooldown = 800; // milliseconds
+let lockDelayFrames = 120;
+let lockCounter = 0;
+let isTouchingGround = false;
+
+const toggleMusic = document.getElementById('toggle-music');
+const toggleShake = document.getElementById('toggle-shake');
+
+let musicEnabled = toggleMusic.checked;
+let shakeEnabled = toggleShake.checked;
 
 let highScore = parseInt(localStorage.getItem('highScore')) || 0;
 let highCombo = parseInt(localStorage.getItem('highCombo')) || 0;
@@ -29,9 +38,27 @@ const sounds = {
   place: new Audio('sounds/place.mp3'),
   collision: new Audio('sounds/collision.mp3'),
   clear: new Audio('sounds/clear.mp3'),
-  pause: new Audio('sounds/pause.mp3'),    // <- new
-  hold: new Audio('sounds/hold.mp3')       // <- new
+  pause: new Audio('sounds/pause.mp3'),    
+  hold: new Audio('sounds/hold.mp3'),      
 };
+
+const backgroundMusic = new Audio('sounds/Tetris.mp3');
+backgroundMusic.loop = true;
+backgroundMusic.volume = 0.2;
+
+let musicStarted = false;
+
+function startBackgroundMusic() {
+  if (!musicStarted) {
+    backgroundMusic.play().catch((e) => {
+      console.warn('Autoplay blocked until user interacts:', e);
+    });
+    musicStarted = true;
+  }
+}
+
+document.addEventListener('click', startBackgroundMusic, { once: true });
+document.addEventListener('keydown', startBackgroundMusic, { once: true });
 
 function playSound(sound) {
   const s = sounds[sound].cloneNode();
@@ -57,6 +84,13 @@ function shakeCanvas(direction) {
 
   lastCollisionTime = now;
 
+  // Play collision sound regardless of shakeEnabled
+  if (direction === 'left' || direction === 'right' || direction === 'down') {
+    playSound('collision');
+  }
+
+  if (!shakeEnabled) return;  // Only shake if enabled
+
   const container = document.getElementById('game-container');
   let transform;
 
@@ -72,14 +106,11 @@ function shakeCanvas(direction) {
 
   container.style.transform = transform;
 
-  if (direction === 'left' || direction === 'right') {
-    playSound('collision');
-  }
-
   setTimeout(() => {
     container.style.transform = 'translate(0, 0)';
   }, 80);
 }
+
 
 
 
@@ -552,11 +583,18 @@ document.addEventListener('keydown', function (e) {
     paused = !paused;
     playSound('pause');
     pauseMenu.classList.toggle('hidden', !paused);
+
 if (paused) {
+  if (musicEnabled) backgroundMusic.pause();
   createColorPickers();
   updatePauseMenuStats();
+} else {
+  if (musicEnabled) backgroundMusic.play();
 }
   }
+
+  // Other key handling below...
+
 
 function updatePauseMenuStats() {
   document.getElementById('pause-highs').innerHTML = `
@@ -743,3 +781,16 @@ function resetHighStats() {
   localStorage.removeItem('highLines');
   updatePauseMenuStats();
 }
+
+toggleMusic.addEventListener('change', () => {
+  musicEnabled = toggleMusic.checked;
+  if (musicEnabled && !paused) {
+    backgroundMusic.play();
+  } else {
+    backgroundMusic.pause();
+  }
+});
+
+toggleShake.addEventListener('change', () => {
+  shakeEnabled = toggleShake.checked;
+});
