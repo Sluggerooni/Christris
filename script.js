@@ -8,7 +8,9 @@ const pauseMenu = document.getElementById('pause-menu');
 const toggleHold = document.getElementById('toggle-hold');
 const toggleNext = document.getElementById('toggle-next');
 const toggleInfo = document.getElementById('toggle-info');
-
+let clearingLines = [];
+let clearAnimationFrame = 0;
+let isClearing = false;
 
 toggleHold.addEventListener('change', () => {
   document.getElementById('hold').style.display = toggleHold.checked ? 'flex' : 'none';
@@ -190,6 +192,28 @@ function placeTetromino() {
     }
   }
 
+function proceedAfterClear() {
+  tetromino = nextTetromino;
+  nextTetromino = getNextTetromino();
+  heldThisTurn = false;
+  updatePreview();
+}
+
+  clearingLines = [];
+  for (let row = playfield.length - 1; row >= 0; row--) {
+    if (playfield[row].every(cell => !!cell)) {
+      clearingLines.push(row);
+    }
+  }
+
+    if (clearingLines.length > 0) {
+    isClearing = true;
+    clearAnimationFrame = 0;
+  } else {
+    combo = 0;
+    proceedAfterClear(); // fallback when no animation is needed
+  }
+
   let linesCleared = 0;
   for (let row = playfield.length - 1; row >= 0;) {
     if (playfield[row].every(cell => !!cell)) {
@@ -213,9 +237,8 @@ function placeTetromino() {
   }
 
   updateInfo();
-  tetromino = nextTetromino;
-  nextTetromino = getNextTetromino();
-  heldThisTurn = false;
+
+
   updatePreview();
 
   tetromino = nextTetrominos.shift();         // get first next tetromino
@@ -274,7 +297,7 @@ function resetGame() {
   // Reset game state
   tetrominoSequence.length = 0;
   let tetromino = getNextTetromino();
-  let nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino()];
+ let nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino()];
 
   hold = null;
   heldThisTurn = false;
@@ -366,6 +389,45 @@ function loop() {
       }
     }
   }
+
+if (isClearing) {
+  clearAnimationFrame++;
+
+  for (const row of clearingLines) {
+    context.fillStyle = clearAnimationFrame % 10 < 5 ? 'white' : 'black';
+    context.fillRect(0, row * grid, 10 * grid, grid - 1);
+  }
+
+  if (clearAnimationFrame > 50) {
+    // Remove the rows after animation
+    for (const row of clearingLines) {
+      for (let r = row; r > 0; r--) {
+        for (let c = 0; c < 10; c++) {
+          playfield[r][c] = playfield[r - 1][c];
+        }
+      }
+      playfield[0].fill(0);
+    }
+
+    const linesCleared = clearingLines.length;
+    lineCount += linesCleared;
+    combo++;
+    score += linesCleared * 100 + combo * 50;
+
+    updateInfo();
+    tetromino = nextTetromino;
+    nextTetromino = getNextTetromino();
+    heldThisTurn = false;
+    updatePreview();
+
+    clearingLines = [];
+    clearAnimationFrame = 0;
+    isClearing = false;
+  }
+
+  return; // pause loop while animating
+}
+
 
   if (tetromino) {
     let ghostRow = tetromino.row;
