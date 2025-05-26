@@ -85,9 +85,10 @@ function shakeCanvas(direction) {
   lastCollisionTime = now;
 
   // Play collision sound regardless of shakeEnabled
-  if (direction === 'left' || direction === 'right' || direction === 'down') {
-    playSound('collision');
-  }
+if (direction === 'left' || direction === 'right') {
+  playSound('collision');
+}
+
 
   if (!shakeEnabled) return;  // Only shake if enabled
 
