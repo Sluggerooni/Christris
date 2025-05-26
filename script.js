@@ -11,6 +11,28 @@ const toggleInfo = document.getElementById('toggle-info');
 let clearingLines = [];
 let clearAnimationFrame = 0;
 let isClearing = false;
+let hardDropped = false;
+let lastCollisionSoundTime = 0;
+const collisionSoundCooldown = 800; // milliseconds
+
+let lastCollisionTime = 0;
+const collisionCooldown = 300; // milliseconds
+
+const sounds = {
+  move: new Audio('sounds/move.mp3'),
+  rotate: new Audio('sounds/rotate.mp3'),
+  harddrop: new Audio('sounds/harddrop.mp3'),
+  place: new Audio('sounds/place.mp3'),
+  collision: new Audio('sounds/collision.mp3'),
+  clear: new Audio('sounds/clear.mp3'),
+  pause: new Audio('sounds/pause.mp3'),    // <- new
+  hold: new Audio('sounds/hold.mp3')       // <- new
+};
+
+function playSound(sound) {
+  const s = sounds[sound].cloneNode();
+  s.play();
+}
 
 toggleHold.addEventListener('change', () => {
   document.getElementById('hold').style.display = toggleHold.checked ? 'flex' : 'none';
@@ -26,20 +48,36 @@ toggleNext.checked = true;
 toggleInfo.checked = true;
 
 function shakeCanvas(direction) {
+  const now = Date.now();
+  if (now - lastCollisionTime < collisionCooldown) return;
+
+  lastCollisionTime = now;
+
   const container = document.getElementById('game-container');
   let transform;
 
-  if (direction === 'left') transform = 'translateX(-13px)';
-else if (direction === 'right') transform = 'translateX(13px)';
-else if (direction === 'down') transform = 'translateY(13px)';
-  else transform = 'none';
+  if (direction === 'left') {
+    transform = 'translateX(-13px)';
+  } else if (direction === 'right') {
+    transform = 'translateX(13px)';
+  } else if (direction === 'down') {
+    transform = 'translateY(13px)';
+  } else {
+    transform = 'none';
+  }
 
   container.style.transform = transform;
+
+  if (direction === 'left' || direction === 'right') {
+    playSound('collision');
+  }
 
   setTimeout(() => {
     container.style.transform = 'translate(0, 0)';
   }, 80);
 }
+
+
 
 // Store default and working color sets
 const defaultColors = {
@@ -183,20 +221,27 @@ function isValidMove(matrix, cellRow, cellCol) {
 }
 
 function placeTetromino() {
-  for (let row = 0; row < tetromino.matrix.length; row++) {
-    for (let col = 0; col < tetromino.matrix[row].length; col++) {
-      if (tetromino.matrix[row][col]) {
-        if (tetromino.row + row < 0) return showGameOver();
-        playfield[tetromino.row + row][tetromino.col + col] = tetromino.name;
-      }
+for (let row = 0; row < tetromino.matrix.length; row++) {
+  for (let col = 0; col < tetromino.matrix[row].length; col++) {
+    if (tetromino.matrix[row][col]) {
+      if (tetromino.row + row < 0) return showGameOver();
+      playfield[tetromino.row + row][tetromino.col + col] = tetromino.name;
     }
   }
+}
+
+// Only play 'place' sound if the piece was NOT hard dropped
+if (!hardDropped) {
+  playSound('place');
+}
+
 
 function proceedAfterClear() {
   tetromino = nextTetromino;
   nextTetromino = getNextTetromino();
   heldThisTurn = false;
   updatePreview();
+  
 }
 
   clearingLines = [];
@@ -204,14 +249,18 @@ function proceedAfterClear() {
     if (playfield[row].every(cell => !!cell)) {
       clearingLines.push(row);
     }
+    
   }
 
     if (clearingLines.length > 0) {
     isClearing = true;
     clearAnimationFrame = 0;
+        playSound('clear'); 
   } else {
     combo = 0;
     proceedAfterClear(); // fallback when no animation is needed
+    
+    
   }
 
   updateInfo();
@@ -224,6 +273,7 @@ function proceedAfterClear() {
 
   heldThisTurn = false;
   updatePreview();
+  hardDropped = false;
 }
 
 function updateInfo() {
@@ -459,20 +509,22 @@ if (clearAnimationFrame > 50) {
 document.addEventListener('keydown', function (e) {
   if (e.code === 'Escape') {
     paused = !paused;
+    playSound('pause');
     pauseMenu.classList.toggle('hidden', !paused);
     if (paused) createColorPickers();
     return;
   }
 
-  if (gameOver || paused) return;
+  // Prevent input during game over, pause, or line clear animation
+  if (gameOver || paused || isClearing) return;
 
   if (e.which === 37 || e.which === 39) {
     const newCol = e.which === 37 ? tetromino.col - 1 : tetromino.col + 1;
 
     if (isValidMove(tetromino.matrix, tetromino.row, newCol)) {
       tetromino.col = newCol;
+      playSound('move');
     } else {
-      // Shake the canvas if move is invalid
       shakeCanvas(e.which === 37 ? 'left' : 'right');
     }
   }
@@ -481,14 +533,19 @@ if (e.which === 38) {
   const rotated = rotate(tetromino.matrix);
   if (isValidMove(rotated, tetromino.row, tetromino.col)) {
     tetromino.matrix = rotated;
+    lockStartTime = null;
+    isTouchingGround = false;
+    playSound('rotate'); // <- add this line
   } else {
-    // Try simple wall kicks (left and right)
-    const kicks = [-1, 1, -2, 2]; // Test offsets from current col
+    const kicks = [-1, 1, -2, 2];
     for (let i = 0; i < kicks.length; i++) {
       const newCol = tetromino.col + kicks[i];
       if (isValidMove(rotated, tetromino.row, newCol)) {
         tetromino.col = newCol;
         tetromino.matrix = rotated;
+        lockStartTime = null;
+        isTouchingGround = false;
+        playSound('rotate'); // <- add this line
         break;
       }
     }
@@ -508,11 +565,13 @@ if (e.which === 38) {
 
   if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !heldThisTurn) {
     if (!hold) {
+        playSound('hold')
       hold = tetromino;
       tetromino = nextTetromino;
       nextTetromino = getNextTetromino();
     } else {
-      [tetromino, hold] = [hold, tetromino];
+      [tetromino, hold] = [hold, tetromino];  playSound('hold');
+      
     }
 
     tetromino.row = tetromino.name === 'I' ? -1 : -2;
@@ -527,8 +586,11 @@ if (e.which === 32) {
   while (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
     tetromino.row++;
   }
+    playSound('harddrop');
   shakeCanvas('down');
   placeTetromino();
+
+
 }
 });
 
