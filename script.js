@@ -19,6 +19,23 @@ toggleInfo.addEventListener('change', () => {
   document.getElementById('info').style.display = toggleInfo.checked ? 'flex' : 'none';
 });
 
+
+function shakeCanvas(direction) {
+  const container = document.getElementById('game-container');
+  let transform;
+
+  if (direction === 'left') transform = 'translateX(-10px)';
+  else if (direction === 'right') transform = 'translateX(10px)';
+  else if (direction === 'down') transform = 'translateY(10px)';
+  else transform = 'none';
+
+  container.style.transform = transform;
+
+  setTimeout(() => {
+    container.style.transform = 'translate(0, 0)';
+  }, 60);
+}
+
 // Store default and working color sets
 const defaultColors = {
   'I': 'Cyan',
@@ -55,7 +72,7 @@ function createColorPickers() {
     input.setAttribute('data-name', name);
     input.value = rgbToHex(colors[name]);
 
-localStorage.setItem('customColors', JSON.stringify(colors));
+    localStorage.setItem('customColors', JSON.stringify(colors));
 
     input.addEventListener('input', () => {
       colors[name] = input.value;
@@ -68,10 +85,10 @@ localStorage.setItem('customColors', JSON.stringify(colors));
   }
 
   const savedColors = localStorage.getItem('customColors');
-if (savedColors) {
-  colors = JSON.parse(savedColors);
-  isUnifiedWhite = Object.values(colors).every(c => c.toLowerCase() === '#ffffff');
-}
+  if (savedColors) {
+    colors = JSON.parse(savedColors);
+    isUnifiedWhite = Object.values(colors).every(c => c.toLowerCase() === '#ffffff');
+  }
 
 }
 
@@ -98,7 +115,7 @@ if (unifyButton) {
 
     isUnifiedWhite = !isUnifiedWhite;
   });
-  
+
 }
 
 for (let row = -2; row < 20; row++) {
@@ -107,13 +124,13 @@ for (let row = -2; row < 20; row++) {
 }
 
 const tetrominos = {
-  'I': [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
-  'J': [[1,0,0],[1,1,1],[0,0,0]],
-  'L': [[0,0,1],[1,1,1],[0,0,0]],
-  'O': [[1,1],[1,1]],
-  'S': [[0,1,1],[1,1,0],[0,0,0]],
-  'Z': [[1,1,0],[0,1,1],[0,0,0]],
-  'T': [[0,1,0],[1,1,1],[0,0,0]]
+  'I': [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
+  'J': [[1, 0, 0], [1, 1, 1], [0, 0, 0]],
+  'L': [[0, 0, 1], [1, 1, 1], [0, 0, 0]],
+  'O': [[1, 1], [1, 1]],
+  'S': [[0, 1, 1], [1, 1, 0], [0, 0, 0]],
+  'Z': [[1, 1, 0], [0, 1, 1], [0, 0, 0]],
+  'T': [[0, 1, 0], [1, 1, 1], [0, 0, 0]]
 };
 
 function getRandomInt(min, max) {
@@ -121,7 +138,7 @@ function getRandomInt(min, max) {
 }
 
 function generateSequence() {
-  const sequence = ['I','J','L','O','S','T','Z'];
+  const sequence = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
   while (sequence.length) {
     const rand = getRandomInt(0, sequence.length - 1);
     const name = sequence.splice(rand, 1)[0];
@@ -151,9 +168,9 @@ function isValidMove(matrix, cellRow, cellCol) {
       if (
         matrix[row][col] &&
         (cellCol + col < 0 ||
-         cellCol + col >= playfield[0].length ||
-         cellRow + row >= playfield.length ||
-         playfield[cellRow + row][cellCol + col])
+          cellCol + col >= playfield[0].length ||
+          cellRow + row >= playfield.length ||
+          playfield[cellRow + row][cellCol + col])
       ) return false;
     }
   }
@@ -175,12 +192,12 @@ function placeTetromino() {
     if (playfield[row].every(cell => !!cell)) {
       linesCleared++;
       for (let r = row; r > 0; r--) {
-  for (let c = 0; c < playfield[r].length; c++) {
-    playfield[r][c] = playfield[r - 1][c];
-  }
-}
-// Clear top row explicitly:
-playfield[0].fill(0);
+        for (let c = 0; c < playfield[r].length; c++) {
+          playfield[r][c] = playfield[r - 1][c];
+        }
+      }
+      // Clear top row explicitly:
+      playfield[0].fill(0);
     } else row--;
   }
 
@@ -193,8 +210,14 @@ playfield[0].fill(0);
   }
 
   updateInfo();
-tetromino = nextTetromino;
-nextTetromino = getNextTetromino();
+  tetromino = nextTetromino;
+  nextTetromino = getNextTetromino();
+  heldThisTurn = false;
+  updatePreview();
+
+  tetromino = nextTetrominos.shift();         // get first next tetromino
+  nextTetrominos.push(getNextTetromino());    // add a new random next tetromino
+
   heldThisTurn = false;
   updatePreview();
 }
@@ -247,8 +270,9 @@ function resetGame() {
 
   // Reset game state
   tetrominoSequence.length = 0;
-  tetromino = getNextTetromino();
-  nextTetromino = getNextTetromino();
+  let tetromino = getNextTetromino();
+  let nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino()];
+
   hold = null;
   heldThisTurn = false;
   score = 0;
@@ -355,19 +379,19 @@ function loop() {
     }
     context.globalAlpha = 1.0;
 
-let fallDelay = 50;
-if (speedMode) {
-  fallDelay = Math.max(5, 90 - Math.floor(score / 100));
-}
+    let fallDelay = 50;
+    if (speedMode) {
+      fallDelay = Math.max(5, 90 - Math.floor(score / 100));
+    }
 
-if (++count > fallDelay) {
-  tetromino.row++;
-  count = 0;
-  if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
-    tetromino.row--;
-    placeTetromino();
-  }
-}
+    if (++count > fallDelay) {
+      tetromino.row++;
+      count = 0;
+      if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
+        tetromino.row--;
+        placeTetromino();
+      }
+    }
 
 
 
@@ -382,24 +406,32 @@ if (++count > fallDelay) {
   }
 }
 
-document.addEventListener('keydown', function(e) {
-  
-if (e.code === 'Escape') {
-  paused = !paused;
-  pauseMenu.classList.toggle('hidden', !paused);
-  if (paused) createColorPickers();
-  return;
-}
+document.addEventListener('keydown', function (e) {
+  if (e.code === 'Escape') {
+    paused = !paused;
+    pauseMenu.classList.toggle('hidden', !paused);
+    if (paused) createColorPickers();
+    return;
+  }
+
   if (gameOver || paused) return;
 
   if (e.which === 37 || e.which === 39) {
-    const col = e.which === 37 ? tetromino.col - 1 : tetromino.col + 1;
-    if (isValidMove(tetromino.matrix, tetromino.row, col)) tetromino.col = col;
+    const newCol = e.which === 37 ? tetromino.col - 1 : tetromino.col + 1;
+
+    if (isValidMove(tetromino.matrix, tetromino.row, newCol)) {
+      tetromino.col = newCol;
+    } else {
+      // Shake the canvas if move is invalid
+      shakeCanvas(e.which === 37 ? 'left' : 'right');
+    }
   }
 
   if (e.which === 38) {
     const rotated = rotate(tetromino.matrix);
-    if (isValidMove(rotated, tetromino.row, tetromino.col)) tetromino.matrix = rotated;
+    if (isValidMove(rotated, tetromino.row, tetromino.col)) {
+      tetromino.matrix = rotated;
+    }
   }
 
   if (e.which === 40) {
@@ -407,7 +439,9 @@ if (e.code === 'Escape') {
     if (!isValidMove(tetromino.matrix, row, tetromino.col)) {
       tetromino.row = row - 1;
       placeTetromino();
-    } else tetromino.row = row;
+    } else {
+      tetromino.row = row;
+    }
   }
 
   if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !heldThisTurn) {
@@ -418,24 +452,24 @@ if (e.code === 'Escape') {
     } else {
       [tetromino, hold] = [hold, tetromino];
     }
+
     tetromino.row = tetromino.name === 'I' ? -1 : -2;
-tetromino.col = Math.floor(playfield[0].length / 2 - Math.ceil(tetromino.matrix[0].length / 2));
+    tetromino.col = Math.floor(playfield[0].length / 2 - Math.ceil(tetromino.matrix[0].length / 2));
 
     heldThisTurn = true;
     updateHoldDisplay();
     updatePreview();
   }
 
-  if (e.which === 32) {
-    while (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
-      tetromino.row++;
-      score += 2;
-    }
-    placeTetromino();
-    updateInfo();
+if (e.which === 32) {
+  while (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
+    tetromino.row++;
   }
-
+  shakeCanvas('down');
+  placeTetromino();
+}
 });
+
 toggleHold.addEventListener('change', () => {
   const value = toggleHold.checked;
   document.getElementById('hold').style.display = value ? 'flex' : 'none';
@@ -487,3 +521,39 @@ speedToggle.addEventListener('change', () => {
   speedMode = speedToggle.checked;
   localStorage.setItem('speedMode', speedMode);
 });
+
+function isCollidingWithBlock(matrix, cellRow, cellCol) {
+  for (let row = 0; row < matrix.length; row++) {
+    for (let col = 0; col < matrix[row].length; col++) {
+      if (matrix[row][col]) {
+        const x = cellCol + col;
+        const y = cellRow + row;
+
+        // Out-of-bounds is not block collision:
+        if (x < 0 || x >= playfield[0].length || y >= playfield.length) continue;
+
+        if (y >= 0 && playfield[y][x]) {
+          return true; // collision with block
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function isCollidingWithWall(matrix, cellRow, cellCol) {
+  for (let row = 0; row < matrix.length; row++) {
+    for (let col = 0; col < matrix[row].length; col++) {
+      if (matrix[row][col]) {
+        const x = cellCol + col;
+        const y = cellRow + row;
+
+        // If out of bounds, it's a wall collision
+        if (x < 0 || x >= playfield[0].length || y >= playfield.length || y < 0) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
