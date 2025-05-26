@@ -37,14 +37,10 @@ canvas {
   width: 150px;
 }
 
-#info p {
-  font-size: 20px;
-  margin-left: 10px;
-}
 
 p {
   color: white;
-  font-family: Georgia, serif;
+  font-family: monospace;
 }
 
 button:hover {
@@ -64,11 +60,7 @@ button:hover {
   width: 150px;
 }
 
-#info p {
-  font-size: 20px;
-  margin-left: 10px;
-  line-height: 1px;
-}
+
 
 #leftside {
   display: flex;
@@ -78,7 +70,7 @@ button:hover {
 
 p {
   color: white;
-  font-family: Georgia, serif;
+  font-family: monospace;
 }
 
 #hold canvas,
@@ -109,7 +101,6 @@ p {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   align-items: flex-start;
   width: 12.2%;
 }
@@ -135,8 +126,7 @@ p {
 }
 
 hr {
-  width: 127%;
-  transform: translate(-11%, 0%);
+  width: 100%;
   border: 1px solid white;
   margin-top: 20px;
 }
@@ -152,7 +142,6 @@ hr {
   cursor: pointer;
   border: 2px solid #555;
   border-radius: 6px;
-  transform: translate(720%, 300%);
 }
 
 #restart-button:hover {
@@ -210,6 +199,10 @@ canvas#game {
   min-width: 150px;
 }
 
+#info p {
+  font-size: 15px
+}
+
 #rightside {
   order: 3
 }
@@ -220,4 +213,12 @@ canvas#game {
 
 #game-container {
   transition: transform 40ms;
+}
+
+.header {
+  font-size:15px
+}
+
+.speed-mode-toggle{
+  margin-bottom: 15px;
 }

@@ -15,6 +15,10 @@ let hardDropped = false;
 let lastCollisionSoundTime = 0;
 const collisionSoundCooldown = 800; // milliseconds
 
+let highScore = parseInt(localStorage.getItem('highScore')) || 0;
+let highCombo = parseInt(localStorage.getItem('highCombo')) || 0;
+let highLines = parseInt(localStorage.getItem('highLines')) || 0;
+
 let lastCollisionTime = 0;
 const collisionCooldown = 300; // milliseconds
 
@@ -221,46 +225,46 @@ function isValidMove(matrix, cellRow, cellCol) {
 }
 
 function placeTetromino() {
-for (let row = 0; row < tetromino.matrix.length; row++) {
-  for (let col = 0; col < tetromino.matrix[row].length; col++) {
-    if (tetromino.matrix[row][col]) {
-      if (tetromino.row + row < 0) return showGameOver();
-      playfield[tetromino.row + row][tetromino.col + col] = tetromino.name;
+  for (let row = 0; row < tetromino.matrix.length; row++) {
+    for (let col = 0; col < tetromino.matrix[row].length; col++) {
+      if (tetromino.matrix[row][col]) {
+        if (tetromino.row + row < 0) return showGameOver();
+        playfield[tetromino.row + row][tetromino.col + col] = tetromino.name;
+      }
     }
   }
-}
 
-// Only play 'place' sound if the piece was NOT hard dropped
-if (!hardDropped) {
-  playSound('place');
-}
+  // Only play 'place' sound if the piece was NOT hard dropped
+  if (!hardDropped) {
+    playSound('place');
+  }
 
 
-function proceedAfterClear() {
-  tetromino = nextTetromino;
-  nextTetromino = getNextTetromino();
-  heldThisTurn = false;
-  updatePreview();
-  
-}
+  function proceedAfterClear() {
+    tetromino = nextTetromino;
+    nextTetromino = getNextTetromino();
+    heldThisTurn = false;
+    updatePreview();
+
+  }
 
   clearingLines = [];
   for (let row = playfield.length - 1; row >= 0; row--) {
     if (playfield[row].every(cell => !!cell)) {
       clearingLines.push(row);
     }
-    
+
   }
 
-    if (clearingLines.length > 0) {
+  if (clearingLines.length > 0) {
     isClearing = true;
     clearAnimationFrame = 0;
-        playSound('clear'); 
+    playSound('clear');
   } else {
     combo = 0;
     proceedAfterClear(); // fallback when no animation is needed
-    
-    
+
+
   }
 
   updateInfo();
@@ -287,23 +291,35 @@ function updateInfo() {
 function showGameOver() {
   cancelAnimationFrame(rAF);
   gameOver = true;
+
+  // Dim background strip
   context.fillStyle = 'black';
   context.globalAlpha = 0.75;
   context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
   context.globalAlpha = 1;
+
+  // Centered GAME OVER text
   context.fillStyle = 'white';
   context.font = '36px monospace';
   context.textAlign = 'center';
+  context.textBaseline = 'middle';
   context.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2);
 
   // Create restart button
   const restartBtn = document.createElement('button');
   restartBtn.textContent = 'Restart';
   restartBtn.id = 'restart-button';
-  restartBtn.style.position = 'absolute';
-  restartBtn.style.left = `${canvas.offsetLeft + canvas.width / 2 - 60}px`;
-  restartBtn.style.top = `${canvas.offsetTop + canvas.height / 2 + 40}px`;
 
+  // Style the button to center it
+  restartBtn.style.position = 'absolute';
+  restartBtn.style.left = `${canvas.offsetLeft + canvas.width / 2}px`;
+  restartBtn.style.top = `${canvas.offsetTop + canvas.height / 2 + 40}px`;
+  restartBtn.style.transform = 'translate(673%, 220%)';
+
+  // Optional: Style the button more nicely
+  restartBtn.style.padding = '10px 20px';
+  restartBtn.style.fontSize = '16px';
+  restartBtn.style.cursor = 'pointer';
 
   document.body.appendChild(restartBtn);
 
@@ -312,6 +328,8 @@ function showGameOver() {
     resetGame();
   });
 }
+
+
 
 function resetGame() {
   // Clear playfield
@@ -325,7 +343,7 @@ function resetGame() {
   // Reset game state
   tetrominoSequence.length = 0;
   let tetromino = getNextTetromino();
- let nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino()];
+  let nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino()];
 
   hold = null;
   heldThisTurn = false;
@@ -418,50 +436,64 @@ function loop() {
     }
   }
 
-if (isClearing) {
-  clearAnimationFrame++;
+  if (isClearing) {
+    clearAnimationFrame++;
 
-  // Draw flashing cleared lines only; do NOT move rows yet
-  for (const row of clearingLines) {
-    context.fillStyle = clearAnimationFrame % 10 < 5 ? 'white' : 'black';
-    context.fillRect(0, row * grid, 10 * grid, grid - 1);
-  }
-
-if (clearAnimationFrame > 50) {
-  // Sort clearing lines ascending (lowest row first)
-  clearingLines.sort((a, b) => a - b);
-
-  for (let i = 0; i < clearingLines.length; i++) {
-    const row = clearingLines[i];
-
-    // Remove this row from playfield
-    // Shift all rows above down by one
-    for (let r = row; r > 0; r--) {
-      playfield[r] = [...playfield[r - 1]]; // Copy row above into current row
+    // Draw flashing cleared lines only; do NOT move rows yet
+    for (const row of clearingLines) {
+      context.fillStyle = clearAnimationFrame % 10 < 5 ? 'white' : 'black';
+      context.fillRect(0, row * grid, 10 * grid, grid - 1);
     }
-    playfield[0] = new Array(10).fill(0); // Clear top row
+
+    if (clearAnimationFrame > 50) {
+      // Sort clearing lines ascending (lowest row first)
+      clearingLines.sort((a, b) => a - b);
+
+      for (let i = 0; i < clearingLines.length; i++) {
+        const row = clearingLines[i];
+
+        // Remove this row from playfield
+        // Shift all rows above down by one
+        for (let r = row; r > 0; r--) {
+          playfield[r] = [...playfield[r - 1]]; // Copy row above into current row
+        }
+        playfield[0] = new Array(10).fill(0); // Clear top row
+      }
+
+      // Update score, combo, etc.
+      const linesCleared = clearingLines.length;
+      lineCount += linesCleared;
+      combo++;
+      score += linesCleared * 100 + combo * 50;
+
+      if (score > highScore) {
+  highScore = score;
+  localStorage.setItem('highScore', highScore);
+}
+if (combo > highCombo) {
+  highCombo = combo;
+  localStorage.setItem('highCombo', highCombo);
+}
+if (lineCount > highLines) {
+  highLines = lineCount;
+  localStorage.setItem('highLines', highLines);
+}
+
+
+      updateInfo();
+      tetromino = nextTetromino;
+      nextTetromino = getNextTetromino();
+      heldThisTurn = false;
+      updatePreview();
+
+      clearingLines = [];
+      clearAnimationFrame = 0;
+      isClearing = false;
+    }
+
+
+    return; // pause loop while animating
   }
-
-  // Update score, combo, etc.
-  const linesCleared = clearingLines.length;
-  lineCount += linesCleared;
-  combo++;
-  score += linesCleared * 100 + combo * 50;
-
-  updateInfo();
-  tetromino = nextTetromino;
-  nextTetromino = getNextTetromino();
-  heldThisTurn = false;
-  updatePreview();
-
-  clearingLines = [];
-  clearAnimationFrame = 0;
-  isClearing = false;
-}
-
-
-  return; // pause loop while animating
-}
 
 
   if (tetromino) {
@@ -506,14 +538,34 @@ if (clearAnimationFrame > 50) {
   }
 }
 
+function updatePauseMenuStats() {
+  document.getElementById('pause-highs').innerHTML = `
+    <p>High Score:${highScore}</p>
+    <p>High Combo: ${highCombo}</p>
+    <p>High Lines: ${highLines}</p>
+  `;
+}
+
+
 document.addEventListener('keydown', function (e) {
   if (e.code === 'Escape') {
     paused = !paused;
     playSound('pause');
     pauseMenu.classList.toggle('hidden', !paused);
-    if (paused) createColorPickers();
-    return;
+if (paused) {
+  createColorPickers();
+  updatePauseMenuStats();
+}
   }
+
+function updatePauseMenuStats() {
+  document.getElementById('pause-highs').innerHTML = `
+    <p>High Score: ${highScore}</p>
+    <p>Top Combo: ${highCombo}</p>
+    <p>Most Lines: ${highLines}</p>
+  `;
+}
+
 
   // Prevent input during game over, pause, or line clear animation
   if (gameOver || paused || isClearing) return;
@@ -529,28 +581,28 @@ document.addEventListener('keydown', function (e) {
     }
   }
 
-if (e.which === 38) {
-  const rotated = rotate(tetromino.matrix);
-  if (isValidMove(rotated, tetromino.row, tetromino.col)) {
-    tetromino.matrix = rotated;
-    lockStartTime = null;
-    isTouchingGround = false;
-    playSound('rotate'); // <- add this line
-  } else {
-    const kicks = [-1, 1, -2, 2];
-    for (let i = 0; i < kicks.length; i++) {
-      const newCol = tetromino.col + kicks[i];
-      if (isValidMove(rotated, tetromino.row, newCol)) {
-        tetromino.col = newCol;
-        tetromino.matrix = rotated;
-        lockStartTime = null;
-        isTouchingGround = false;
-        playSound('rotate'); // <- add this line
-        break;
+  if (e.which === 38) {
+    const rotated = rotate(tetromino.matrix);
+    if (isValidMove(rotated, tetromino.row, tetromino.col)) {
+      tetromino.matrix = rotated;
+      lockStartTime = null;
+      isTouchingGround = false;
+      playSound('rotate'); // <- add this line
+    } else {
+      const kicks = [-1, 1, -2, 2];
+      for (let i = 0; i < kicks.length; i++) {
+        const newCol = tetromino.col + kicks[i];
+        if (isValidMove(rotated, tetromino.row, newCol)) {
+          tetromino.col = newCol;
+          tetromino.matrix = rotated;
+          lockStartTime = null;
+          isTouchingGround = false;
+          playSound('rotate'); // <- add this line
+          break;
+        }
       }
     }
   }
-}
 
 
   if (e.which === 40) {
@@ -565,13 +617,13 @@ if (e.which === 38) {
 
   if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !heldThisTurn) {
     if (!hold) {
-        playSound('hold')
+      playSound('hold')
       hold = tetromino;
       tetromino = nextTetromino;
       nextTetromino = getNextTetromino();
     } else {
-      [tetromino, hold] = [hold, tetromino];  playSound('hold');
-      
+      [tetromino, hold] = [hold, tetromino]; playSound('hold');
+
     }
 
     tetromino.row = tetromino.name === 'I' ? -1 : -2;
@@ -582,16 +634,16 @@ if (e.which === 38) {
     updatePreview();
   }
 
-if (e.which === 32) {
-  while (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
-    tetromino.row++;
-  }
+  if (e.which === 32) {
+    while (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
+      tetromino.row++;
+    }
     playSound('harddrop');
-  shakeCanvas('down');
-  placeTetromino();
+    shakeCanvas('down');
+    placeTetromino();
 
 
-}
+  }
 });
 
 toggleHold.addEventListener('change', () => {
@@ -680,4 +732,14 @@ function isCollidingWithWall(matrix, cellRow, cellCol) {
     }
   }
   return false;
+}
+
+function resetHighStats() {
+  highScore = 0;
+  highCombo = 0;
+  highLines = 0;
+  localStorage.removeItem('highScore');
+  localStorage.removeItem('highCombo');
+  localStorage.removeItem('highLines');
+  updatePauseMenuStats();
 }
