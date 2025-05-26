@@ -29,16 +29,16 @@ function shakeCanvas(direction) {
   const container = document.getElementById('game-container');
   let transform;
 
-  if (direction === 'left') transform = 'translateX(-10px)';
-  else if (direction === 'right') transform = 'translateX(10px)';
-  else if (direction === 'down') transform = 'translateY(10px)';
+  if (direction === 'left') transform = 'translateX(-13px)';
+else if (direction === 'right') transform = 'translateX(13px)';
+else if (direction === 'down') transform = 'translateY(13px)';
   else transform = 'none';
 
   container.style.transform = transform;
 
   setTimeout(() => {
     container.style.transform = 'translate(0, 0)';
-  }, 60);
+  }, 80);
 }
 
 // Store default and working color sets
@@ -214,28 +214,6 @@ function proceedAfterClear() {
     proceedAfterClear(); // fallback when no animation is needed
   }
 
-  let linesCleared = 0;
-  for (let row = playfield.length - 1; row >= 0;) {
-    if (playfield[row].every(cell => !!cell)) {
-      linesCleared++;
-      for (let r = row; r > 0; r--) {
-        for (let c = 0; c < playfield[r].length; c++) {
-          playfield[r][c] = playfield[r - 1][c];
-        }
-      }
-      // Clear top row explicitly:
-      playfield[0].fill(0);
-    } else row--;
-  }
-
-  if (linesCleared > 0) {
-    lineCount += linesCleared;
-    combo++;
-    score += linesCleared * 100 + combo * 50;
-  } else {
-    combo = 0;
-  }
-
   updateInfo();
 
 
@@ -393,37 +371,44 @@ function loop() {
 if (isClearing) {
   clearAnimationFrame++;
 
+  // Draw flashing cleared lines only; do NOT move rows yet
   for (const row of clearingLines) {
     context.fillStyle = clearAnimationFrame % 10 < 5 ? 'white' : 'black';
     context.fillRect(0, row * grid, 10 * grid, grid - 1);
   }
 
-  if (clearAnimationFrame > 50) {
-    // Remove the rows after animation
-    for (const row of clearingLines) {
-      for (let r = row; r > 0; r--) {
-        for (let c = 0; c < 10; c++) {
-          playfield[r][c] = playfield[r - 1][c];
-        }
-      }
-      playfield[0].fill(0);
+if (clearAnimationFrame > 50) {
+  // Sort clearing lines ascending (lowest row first)
+  clearingLines.sort((a, b) => a - b);
+
+  for (let i = 0; i < clearingLines.length; i++) {
+    const row = clearingLines[i];
+
+    // Remove this row from playfield
+    // Shift all rows above down by one
+    for (let r = row; r > 0; r--) {
+      playfield[r] = [...playfield[r - 1]]; // Copy row above into current row
     }
-
-    const linesCleared = clearingLines.length;
-    lineCount += linesCleared;
-    combo++;
-    score += linesCleared * 100 + combo * 50;
-
-    updateInfo();
-    tetromino = nextTetromino;
-    nextTetromino = getNextTetromino();
-    heldThisTurn = false;
-    updatePreview();
-
-    clearingLines = [];
-    clearAnimationFrame = 0;
-    isClearing = false;
+    playfield[0] = new Array(10).fill(0); // Clear top row
   }
+
+  // Update score, combo, etc.
+  const linesCleared = clearingLines.length;
+  lineCount += linesCleared;
+  combo++;
+  score += linesCleared * 100 + combo * 50;
+
+  updateInfo();
+  tetromino = nextTetromino;
+  nextTetromino = getNextTetromino();
+  heldThisTurn = false;
+  updatePreview();
+
+  clearingLines = [];
+  clearAnimationFrame = 0;
+  isClearing = false;
+}
+
 
   return; // pause loop while animating
 }
