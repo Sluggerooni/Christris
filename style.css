@@ -24,17 +24,6 @@ canvas {
   justify-content: center;
 }
 
-#hold,
-#next {
-  background: rgb(14, 14, 14);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid white;
-
-  height: 150px;
-  width: 150px;
-}
 
 
 p {
@@ -54,8 +43,8 @@ button:hover {
   justify-content: space-around;
   flex-direction: column;
   border: 3px solid white;
-  height: 150px;
-  width: 150px;
+  height: 100px;
+  width: 100px;
 }
 
 #leftside {
@@ -69,8 +58,7 @@ p {
   font-family: monospace;
 }
 
-#hold canvas,
-#next canvas {
+#hold canvas{
   display: block;
   margin: auto;
   height: 100px;
@@ -82,6 +70,61 @@ p {
   height: 150px;
   width: 150px;
   transform: translate(20%, 30%);
+}
+
+
+#hold {
+  background: rgb(14, 14, 14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  height: 100px;
+  width: 100px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #222;
+  padding: 10px;
+  border-radius: 6px;
+  border: 2px solid #555;
+  min-width: 100px;
+}
+
+#next canvas {
+  display: block;
+  margin: auto;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0px solid white;
+  margin-left: 10px;
+  height: 120px;
+  width: 120px;
+  transform: translate(0%, 30%);
+}
+
+
+
+#next {
+  background: rgb(14, 14, 14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid white;
+  height: 480px;
+  width: 100px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #222;
+  padding: 10px;
+  border-radius: 6px;
+  border: 2px solid #555;
+  min-width: 100px;
 }
 
 #pause-menu {
@@ -112,7 +155,7 @@ p {
 
 #pause-menu h2 {
   font-size: 24px;
-  margin: 0 0 20px 0;
+  margin: 0 0 20px 30%;
 }
 
 #unify-colors {
@@ -193,28 +236,17 @@ canvas#game {
   margin-top: 20px;
 }
 
-#hold,
-#next {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: #222;
-  padding: 10px;
-  border-radius: 6px;
-  border: 2px solid #555;
-  min-width: 150px;
-}
-
 #info {
   background: #222;
   padding: 10px;
   border-radius: 6px;
   border: 2px solid #555;
-  min-width: 150px;
+  min-width: 100px;
 }
 
 #info p {
-  font-size: 15px
+  font-size: 15px;
+  margin: 0;
 }
 
 #rightside {
