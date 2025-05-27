@@ -46,9 +46,9 @@ const sounds = {
   place: new Audio('sounds/place.mp3'),
   collision: new Audio('sounds/collision.mp3'),
   clear: new Audio('sounds/clear.mp3'),
-  pause: new Audio('sounds/pause.mp3'),    
-  hold: new Audio('sounds/hold.mp3'), 
-  gameover: new Audio('sounds/gameend.mp3'),     
+  pause: new Audio('sounds/pause.mp3'),
+  hold: new Audio('sounds/hold.mp3'),
+  gameover: new Audio('sounds/gameend.mp3'),
 };
 
 const backgroundMusic = new Audio('sounds/Tetris.mp3');
@@ -97,9 +97,9 @@ function shakeCanvas(direction) {
   lastCollisionTime = now;
 
   // Play collision sound regardless of shakeEnabled
-if (direction === 'left' || direction === 'right') {
-  playSound('collision');
-}
+  if (direction === 'left' || direction === 'right') {
+    playSound('collision');
+  }
 
 
   if (!shakeEnabled) return;  // Only shake if enabled
@@ -325,9 +325,6 @@ function placeTetromino() {
 
   updatePreview();
 
-  tetromino = nextTetrominos.shift();         // get first next tetromino
-  nextTetrominos.push(getNextTetromino());    // add a new random next tetromino
-
   heldThisTurn = false;
   updatePreview();
   hardDropped = false;
@@ -351,7 +348,7 @@ function showGameOver() {
 
   // Play game over sound once
   playSound('place');
-playSound('gameover');
+  playSound('gameover');
 
   // Dim background strip
   context.fillStyle = 'black';
@@ -371,14 +368,6 @@ playSound('gameover');
   restartBtn.textContent = 'Restart';
   restartBtn.id = 'restart-button';
 
-  // Style the button to center it
-  restartBtn.style.position = 'absolute';
-  restartBtn.style.left = `${canvas.offsetLeft + canvas.width / 2}px`;
-  restartBtn.style.top = `${canvas.offsetTop + canvas.height / 2 + 40}px`;
-
-  restartBtn.style.padding = '10px 20px';
-  restartBtn.style.fontSize = '16px';
-  restartBtn.style.cursor = 'pointer';
 
   document.body.appendChild(restartBtn);
 
@@ -515,7 +504,7 @@ function loop() {
       context.fillRect(0, row * grid, 10 * grid, grid - 1);
     }
 
-    if (clearAnimationFrame > 50) {
+    if (clearAnimationFrame > 20) {
       // Sort clearing lines ascending (lowest row first)
       clearingLines.sort((a, b) => a - b);
 
@@ -537,17 +526,17 @@ function loop() {
       score += linesCleared * 100 + combo * 50;
 
       if (score > highScore) {
-  highScore = score;
-  localStorage.setItem('highScore', highScore);
-}
-if (combo > highCombo) {
-  highCombo = combo;
-  localStorage.setItem('highCombo', highCombo);
-}
-if (lineCount > highLines) {
-  highLines = lineCount;
-  localStorage.setItem('highLines', highLines);
-}
+        highScore = score;
+        localStorage.setItem('highScore', highScore);
+      }
+      if (combo > highCombo) {
+        highCombo = combo;
+        localStorage.setItem('highCombo', highCombo);
+      }
+      if (lineCount > highLines) {
+        highLines = lineCount;
+        localStorage.setItem('highLines', highLines);
+      }
 
 
       updateInfo();
@@ -581,13 +570,13 @@ if (lineCount > highLines) {
     }
     context.globalAlpha = 1.0;
 
-  let fallDelay = speedMode ? 8 : 80; // fixed speeds for each mode
+    let fallDelay = speedMode ? 5 : 55; // fixed speeds for each mode
 
 
     if (++count > fallDelay) {
       tetromino.row++;
       count = 0;
-      
+
       if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
         tetromino.row--;
         placeTetromino();
@@ -622,25 +611,25 @@ document.addEventListener('keydown', function (e) {
     playSound('pause');
     pauseMenu.classList.toggle('hidden', !paused);
 
-if (paused) {
-  if (musicEnabled) backgroundMusic.pause();
-  createColorPickers();
-  updatePauseMenuStats();
-} else {
-  if (musicEnabled) backgroundMusic.play();
-}
+    if (paused) {
+      if (musicEnabled) backgroundMusic.pause();
+      createColorPickers();
+      updatePauseMenuStats();
+    } else {
+      if (musicEnabled) backgroundMusic.play();
+    }
   }
 
   // Other key handling below...
 
 
-function updatePauseMenuStats() {
-  document.getElementById('pause-highs').innerHTML = `
+  function updatePauseMenuStats() {
+    document.getElementById('pause-highs').innerHTML = `
     <p>High Score: ${highScore}</p>
     <p>Top Combo: ${highCombo}</p>
     <p>Most Lines: ${highLines}</p>
   `;
-}
+  }
 
 
   // Prevent input during game over, pause, or line clear animation
@@ -681,7 +670,7 @@ function updatePauseMenuStats() {
   }
 
 
-  if (e.which === 40) {
+  if (e.which === 40 || e.code === 'Numpad5') {
     const row = tetromino.row + 1;
     if (!isValidMove(tetromino.matrix, row, tetromino.col)) {
       tetromino.row = row - 1;
