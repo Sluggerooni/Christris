@@ -22,7 +22,6 @@ canvas {
   width: 100vw;
   display: flex;
   justify-content: center;
-
 }
 
 #hold,
@@ -32,7 +31,7 @@ canvas {
   align-items: center;
   justify-content: center;
   border: 3px solid white;
- 
+
   height: 150px;
   width: 150px;
 }
@@ -156,11 +155,12 @@ hr {
   cursor: pointer;
   border: 2px solid #555;
   border-radius: 6px;
-  transform: translate(760%,320%);
+  position: absolute;
+  transform: translate(0%, 150%);
 }
 
 #restart-button:hover {
-  background-color: #131313;
+  background-color: rgb(17, 17, 17);
 }
 
 body {
@@ -241,7 +241,6 @@ canvas#game {
   cursor: pointer;
   border: 2px solid #555;
   border-radius: 6px;
-
 }
 
 .reset:hover {
@@ -252,9 +251,7 @@ canvas#game {
 #controls {
   display: flex;
   flex-direction: column;
-
   text-align: left;
-
 }
 
 #controls p {
@@ -263,8 +260,32 @@ canvas#game {
   width: 100%;
 }
 
-#settings{
-    display: flex;
+#modifiers {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+#modifiers p {
+  margin: 0;
+  padding: 5px;
+  width: 100%;
+}
+
+#scores {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+#scores p {
+  margin: 0;
+  padding: 5px;
+  width: 100%;
+}
+
+#settings {
+  display: flex;
   flex-direction: column;
 
   text-align: left;
