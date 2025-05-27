@@ -13,21 +13,17 @@ let clearAnimationFrame = 0;
 let isClearing = false;
 let hardDropped = false;
 let lastCollisionSoundTime = 0;
-const collisionSoundCooldown = 800; // milliseconds
+const collisionSoundCooldown = 800;
 let lockDelayFrames = 120;
 let lockCounter = 0;
 let isTouchingGround = false;
-
 const toggleMusic = document.getElementById('toggle-music');
 const toggleShake = document.getElementById('toggle-shake');
-
 let musicEnabled = toggleMusic.checked;
 let shakeEnabled = toggleShake.checked;
-
 let highScore = parseInt(localStorage.getItem('highScore')) || 0;
 let highCombo = parseInt(localStorage.getItem('highCombo')) || 0;
 let highLines = parseInt(localStorage.getItem('highLines')) || 0;
-
 const speedToggle = document.getElementById('speed-mode-toggle');
 let speedMode = speedToggle.checked;
 
@@ -37,7 +33,7 @@ speedToggle.addEventListener('change', () => {
 
 
 let lastCollisionTime = 0;
-const collisionCooldown = 300; // milliseconds
+const collisionCooldown = 300;
 
 const sounds = {
   move: new Audio('sounds/move.mp3'),
@@ -66,16 +62,20 @@ function startBackgroundMusic() {
   }
 }
 
-
-
 document.addEventListener('click', startBackgroundMusic, { once: true });
 document.addEventListener('keydown', startBackgroundMusic, { once: true });
+
+function advanceTetromino() {
+  tetromino = nextTetromino;
+  nextTetrominos.push(getNextTetromino());
+  nextTetromino = nextTetrominos.shift();
+  updatePreview();
+}
 
 function playSound(sound) {
   const s = sounds[sound].cloneNode();
   s.play();
 }
-
 
 toggleHold.addEventListener('change', () => {
   document.getElementById('hold').style.display = toggleHold.checked ? 'flex' : 'none';
@@ -95,14 +95,12 @@ function shakeCanvas(direction) {
   if (now - lastCollisionTime < collisionCooldown) return;
 
   lastCollisionTime = now;
-
-  // Play collision sound regardless of shakeEnabled
   if (direction === 'left' || direction === 'right') {
     playSound('collision');
   }
 
 
-  if (!shakeEnabled) return;  // Only shake if enabled
+  if (!shakeEnabled) return;
 
   const container = document.getElementById('game-container');
   let transform;
@@ -124,10 +122,6 @@ function shakeCanvas(direction) {
   }, 80);
 }
 
-
-
-
-// Store default and working color sets
 const defaultColors = {
   'I': 'Cyan',
   'O': 'Gold',
@@ -140,14 +134,12 @@ const defaultColors = {
 let colors = { ...defaultColors };
 let isUnifiedWhite = false;
 
-// Utility: Convert color names to hex
 function rgbToHex(colorName) {
   const ctx = document.createElement('canvas').getContext('2d');
   ctx.fillStyle = colorName;
   return ctx.fillStyle;
 }
 
-// Color Picker Generator
 function createColorPickers() {
   const container = document.getElementById('color-pickers');
   if (!container) return;
@@ -183,23 +175,16 @@ function createColorPickers() {
 
 }
 
-
-
-// Unify Colors Button Logic
 const unifyButton = document.getElementById('unify-colors');
 if (unifyButton) {
   unifyButton.addEventListener('click', () => {
     if (!isUnifiedWhite) {
-      // Set all to white
       for (const key in colors) colors[key] = '#FFFFFF';
       unifyButton.textContent = 'Set All Colors to Default';
     } else {
-      // Restore original
       for (const key in colors) colors[key] = defaultColors[key];
       unifyButton.textContent = 'Set All Colors to White';
     }
-
-    // Update color pickers
     const inputs = document.querySelectorAll('#color-pickers input[type="color"]');
     inputs.forEach(input => {
       const name = input.getAttribute('data-name');
@@ -287,17 +272,14 @@ function placeTetromino() {
     }
   }
 
-  // Only play 'place' sound if the piece was NOT hard dropped
   if (!hardDropped) {
     playSound('place');
   }
 
-
   function proceedAfterClear() {
-    tetromino = nextTetromino;
-    nextTetromino = getNextTetromino();
+    advanceTetromino();
     heldThisTurn = false;
-    updatePreview();
+
 
   }
 
@@ -315,16 +297,10 @@ function placeTetromino() {
     playSound('clear');
   } else {
     combo = 0;
-    proceedAfterClear(); // fallback when no animation is needed
-
-
+    proceedAfterClear(); 
   }
-
   updateInfo();
-
-
   updatePreview();
-
   heldThisTurn = false;
   updatePreview();
   hardDropped = false;
@@ -342,32 +318,26 @@ function showGameOver() {
   cancelAnimationFrame(rAF);
   gameOver = true;
 
-  // Stop background music
   backgroundMusic.pause();
   backgroundMusic.currentTime = 0;
 
-  // Play game over sound once
   playSound('place');
   playSound('gameover');
 
-  // Dim background strip
   context.fillStyle = 'black';
   context.globalAlpha = 0.75;
   context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
   context.globalAlpha = 1;
 
-  // Centered GAME OVER text
   context.fillStyle = 'white';
   context.font = '36px monospace';
   context.textAlign = 'center';
   context.textBaseline = 'middle';
   context.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2);
 
-  // Create restart button
   const restartBtn = document.createElement('button');
   restartBtn.textContent = 'Restart';
   restartBtn.id = 'restart-button';
-
 
   document.body.appendChild(restartBtn);
 
@@ -377,11 +347,7 @@ function showGameOver() {
   });
 }
 
-
-
-
 function resetGame() {
-  // Clear playfield
   for (let row = -2; row < 20; row++) {
     playfield[row] = [];
     for (let col = 0; col < 10; col++) {
@@ -389,10 +355,11 @@ function resetGame() {
     }
   }
 
-  // Reset game state
-  tetrominoSequence.length = 0;
-  tetromino = getNextTetromino();
-  nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino()];
+tetrominoSequence.length = 0;
+generateSequence();
+tetromino = getNextTetromino();
+nextTetrominos = [getNextTetromino(), getNextTetromino()];
+nextTetromino = getNextTetromino();
 
   hold = null;
   heldThisTurn = false;
@@ -404,7 +371,6 @@ function resetGame() {
   updatePreview();
   updateHoldDisplay();
 
-  // Unpause music here:
   if (musicEnabled) {
     backgroundMusic.play().catch(e => {
       console.warn('Could not autoplay background music:', e);
@@ -415,28 +381,36 @@ function resetGame() {
   rAF = requestAnimationFrame(loop);
 }
 
-
 function updatePreview() {
-  const canvasNext = document.createElement('canvas');
-  canvasNext.width = 150;
-  canvasNext.height = 150;
-  const ctxNext = canvasNext.getContext('2d');
   const preview = document.getElementById('next');
   preview.innerHTML = '';
-  preview.appendChild(canvasNext);
 
-  const matrix = nextTetromino.matrix;
-  const color = colors[nextTetromino.name];
-  const blockSize = 30;
-  ctxNext.fillStyle = color;
-  for (let r = 0; r < matrix.length; r++) {
-    for (let c = 0; c < matrix[r].length; c++) {
-      if (matrix[r][c]) {
-        ctxNext.fillRect(c * blockSize, r * blockSize, blockSize - 2, blockSize - 2);
+  const previewQueue = [nextTetromino, ...nextTetrominos]; // include the immediate next one
+
+  previewQueue.forEach(tet => {
+    const canvasNext = document.createElement('canvas');
+    canvasNext.width = 120;
+    canvasNext.height = 120;
+
+    const ctxNext = canvasNext.getContext('2d');
+    const matrix = tet.matrix;
+    const color = colors[tet.name];
+    const blockSize = 30;
+
+    ctxNext.fillStyle = color;
+    for (let r = 0; r < matrix.length; r++) {
+      for (let c = 0; c < matrix[r].length; c++) {
+        if (matrix[r][c]) {
+          ctxNext.fillRect(c * blockSize, r * blockSize, blockSize - 2, blockSize - 2);
+        }
       }
     }
-  }
+
+    preview.appendChild(canvasNext);
+  });
 }
+
+
 
 function updateHoldDisplay() {
   const holdDiv = document.getElementById('hold');
@@ -460,13 +434,15 @@ function updateHoldDisplay() {
       }
     }
   }
-
   holdDiv.appendChild(canvasHold);
 }
 
 let count = 0;
 let tetromino = getNextTetromino();
-let nextTetromino = getNextTetromino();
+nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino(), getNextTetromino()];
+nextTetromino = nextTetrominos.shift(); // 3 remain
+
+
 let hold = null;
 let heldThisTurn = false;
 let rAF = null;
@@ -484,7 +460,6 @@ function loop() {
 
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw placed blocks
   for (let row = 0; row < 20; row++) {
     for (let col = 0; col < 10; col++) {
       if (playfield[row][col]) {
@@ -498,28 +473,23 @@ function loop() {
   if (isClearing) {
     clearAnimationFrame++;
 
-    // Draw flashing cleared lines only; do NOT move rows yet
     for (const row of clearingLines) {
       context.fillStyle = clearAnimationFrame % 10 < 5 ? 'white' : 'black';
       context.fillRect(0, row * grid, 10 * grid, grid - 1);
     }
 
     if (clearAnimationFrame > 20) {
-      // Sort clearing lines ascending (lowest row first)
       clearingLines.sort((a, b) => a - b);
 
       for (let i = 0; i < clearingLines.length; i++) {
         const row = clearingLines[i];
 
-        // Remove this row from playfield
-        // Shift all rows above down by one
         for (let r = row; r > 0; r--) {
-          playfield[r] = [...playfield[r - 1]]; // Copy row above into current row
+          playfield[r] = [...playfield[r - 1]]; 
         }
-        playfield[0] = new Array(10).fill(0); // Clear top row
+        playfield[0] = new Array(10).fill(0);
       }
 
-      // Update score, combo, etc.
       const linesCleared = clearingLines.length;
       lineCount += linesCleared;
       combo++;
@@ -538,10 +508,9 @@ function loop() {
         localStorage.setItem('highLines', highLines);
       }
 
-
       updateInfo();
-      tetromino = nextTetromino;
-      nextTetromino = getNextTetromino();
+      advanceTetromino();
+      
       heldThisTurn = false;
       updatePreview();
 
@@ -550,10 +519,8 @@ function loop() {
       isClearing = false;
     }
 
-
-    return; // pause loop while animating
+    return;
   }
-
 
   if (tetromino) {
     let ghostRow = tetromino.row;
@@ -570,8 +537,7 @@ function loop() {
     }
     context.globalAlpha = 1.0;
 
-    let fallDelay = speedMode ? 5 : 55; // fixed speeds for each mode
-
+    let fallDelay = speedMode ? 5 : 55;
 
     if (++count > fallDelay) {
       tetromino.row++;
@@ -582,8 +548,6 @@ function loop() {
         placeTetromino();
       }
     }
-
-
 
     context.fillStyle = colors[tetromino.name];
     for (let row = 0; row < tetromino.matrix.length; row++) {
@@ -620,9 +584,6 @@ document.addEventListener('keydown', function (e) {
     }
   }
 
-  // Other key handling below...
-
-
   function updatePauseMenuStats() {
     document.getElementById('pause-highs').innerHTML = `
     <p>High Score: ${highScore}</p>
@@ -631,8 +592,6 @@ document.addEventListener('keydown', function (e) {
   `;
   }
 
-
-  // Prevent input during game over, pause, or line clear animation
   if (gameOver || paused || isClearing) return;
 
   if (e.which === 37 || e.which === 39) {
@@ -652,7 +611,7 @@ document.addEventListener('keydown', function (e) {
       tetromino.matrix = rotated;
       lockStartTime = null;
       isTouchingGround = false;
-      playSound('rotate'); // <- add this line
+      playSound('rotate');
     } else {
       const kicks = [-1, 1, -2, 2];
       for (let i = 0; i < kicks.length; i++) {
@@ -662,7 +621,7 @@ document.addEventListener('keydown', function (e) {
           tetromino.matrix = rotated;
           lockStartTime = null;
           isTouchingGround = false;
-          playSound('rotate'); // <- add this line
+          playSound('rotate');
           break;
         }
       }
@@ -685,10 +644,11 @@ document.addEventListener('keydown', function (e) {
       playSound('hold')
       hold = tetromino;
       tetromino = nextTetromino;
-      nextTetromino = getNextTetromino();
+      nextTetrominos.push(getNextTetromino());
+      nextTetromino = nextTetrominos.shift();
+      
     } else {
       [tetromino, hold] = [hold, tetromino]; playSound('hold');
-
     }
 
     tetromino.row = tetromino.name === 'I' ? -1 : -2;
@@ -706,17 +666,14 @@ document.addEventListener('keydown', function (e) {
     playSound('harddrop');
     shakeCanvas('down');
     placeTetromino();
-
-
   }
 });
-
 
 document.addEventListener('keydown', (e) => {
   if (paused || gameOver || isClearing) return;
 
   switch (e.key) {
-    case 's': // Rotate counter-clockwise
+    case 's':
       const ccwMatrix = rotateCounterClockwise(tetromino.matrix);
       if (isValidMove(ccwMatrix, tetromino.row, tetromino.col)) {
         tetromino.matrix = ccwMatrix;
@@ -725,7 +682,6 @@ document.addEventListener('keydown', (e) => {
       break;
   }
 });
-
 
 toggleHold.addEventListener('change', () => {
   const value = toggleHold.checked;
@@ -763,10 +719,7 @@ window.addEventListener('load', () => {
 
 rAF = requestAnimationFrame(loop);
 
-
-
 window.addEventListener('load', () => {
-  // ...existing code
   const savedSpeedMode = localStorage.getItem('speedMode') === 'true';
   speedToggle.checked = savedSpeedMode;
   speedMode = savedSpeedMode;
@@ -784,11 +737,10 @@ function isCollidingWithBlock(matrix, cellRow, cellCol) {
         const x = cellCol + col;
         const y = cellRow + row;
 
-        // Out-of-bounds is not block collision:
         if (x < 0 || x >= playfield[0].length || y >= playfield.length) continue;
 
         if (y >= 0 && playfield[y][x]) {
-          return true; // collision with block
+          return true; 
         }
       }
     }
@@ -803,7 +755,6 @@ function isCollidingWithWall(matrix, cellRow, cellCol) {
         const x = cellCol + col;
         const y = cellRow + row;
 
-        // If out of bounds, it's a wall collision
         if (x < 0 || x >= playfield[0].length || y >= playfield.length || y < 0) {
           return true;
         }
@@ -838,7 +789,6 @@ if (musicEnabled && !gameOver) {
   });
   musicStarted = true;
 }
-
 
 toggleShake.addEventListener('change', () => {
   shakeEnabled = toggleShake.checked;
