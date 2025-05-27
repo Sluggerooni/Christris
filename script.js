@@ -28,6 +28,14 @@ let highScore = parseInt(localStorage.getItem('highScore')) || 0;
 let highCombo = parseInt(localStorage.getItem('highCombo')) || 0;
 let highLines = parseInt(localStorage.getItem('highLines')) || 0;
 
+const speedToggle = document.getElementById('speed-mode-toggle');
+let speedMode = speedToggle.checked;
+
+speedToggle.addEventListener('change', () => {
+  speedMode = speedToggle.checked;
+});
+
+
 let lastCollisionTime = 0;
 const collisionCooldown = 300; // milliseconds
 
@@ -39,7 +47,8 @@ const sounds = {
   collision: new Audio('sounds/collision.mp3'),
   clear: new Audio('sounds/clear.mp3'),
   pause: new Audio('sounds/pause.mp3'),    
-  hold: new Audio('sounds/hold.mp3'),      
+  hold: new Audio('sounds/hold.mp3'), 
+  gameover: new Audio('sounds/gameend.mp3'),     
 };
 
 const backgroundMusic = new Audio('sounds/Tetris.mp3');
@@ -49,13 +58,15 @@ backgroundMusic.volume = 0.2;
 let musicStarted = false;
 
 function startBackgroundMusic() {
-  if (!musicStarted) {
+  if (!musicStarted && !gameOver && musicEnabled) {
     backgroundMusic.play().catch((e) => {
       console.warn('Autoplay blocked until user interacts:', e);
     });
     musicStarted = true;
   }
 }
+
+
 
 document.addEventListener('click', startBackgroundMusic, { once: true });
 document.addEventListener('keydown', startBackgroundMusic, { once: true });
@@ -64,6 +75,7 @@ function playSound(sound) {
   const s = sounds[sound].cloneNode();
   s.play();
 }
+
 
 toggleHold.addEventListener('change', () => {
   document.getElementById('hold').style.display = toggleHold.checked ? 'flex' : 'none';
@@ -171,6 +183,8 @@ function createColorPickers() {
 
 }
 
+
+
 // Unify Colors Button Logic
 const unifyButton = document.getElementById('unify-colors');
 if (unifyButton) {
@@ -238,6 +252,13 @@ function rotate(matrix) {
   const N = matrix.length - 1;
   return matrix.map((row, i) =>
     row.map((_, j) => matrix[N - j][i])
+  );
+}
+
+function rotateCounterClockwise(matrix) {
+  const N = matrix.length - 1;
+  return matrix.map((row, i) =>
+    row.map((_, j) => matrix[j][N - i])
   );
 }
 
@@ -324,6 +345,14 @@ function showGameOver() {
   cancelAnimationFrame(rAF);
   gameOver = true;
 
+  // Stop background music
+  backgroundMusic.pause();
+  backgroundMusic.currentTime = 0;
+
+  // Play game over sound once
+  playSound('place');
+playSound('gameover');
+
   // Dim background strip
   context.fillStyle = 'black';
   context.globalAlpha = 0.75;
@@ -346,9 +375,7 @@ function showGameOver() {
   restartBtn.style.position = 'absolute';
   restartBtn.style.left = `${canvas.offsetLeft + canvas.width / 2}px`;
   restartBtn.style.top = `${canvas.offsetTop + canvas.height / 2 + 40}px`;
-  restartBtn.style.transform = 'translate(673%, 220%)';
 
-  // Optional: Style the button more nicely
   restartBtn.style.padding = '10px 20px';
   restartBtn.style.fontSize = '16px';
   restartBtn.style.cursor = 'pointer';
@@ -363,6 +390,7 @@ function showGameOver() {
 
 
 
+
 function resetGame() {
   // Clear playfield
   for (let row = -2; row < 20; row++) {
@@ -374,8 +402,8 @@ function resetGame() {
 
   // Reset game state
   tetrominoSequence.length = 0;
-  let tetromino = getNextTetromino();
-  let nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino()];
+  tetromino = getNextTetromino();
+  nextTetrominos = [getNextTetromino(), getNextTetromino(), getNextTetromino()];
 
   hold = null;
   heldThisTurn = false;
@@ -386,8 +414,18 @@ function resetGame() {
   updateInfo();
   updatePreview();
   updateHoldDisplay();
+
+  // Unpause music here:
+  if (musicEnabled) {
+    backgroundMusic.play().catch(e => {
+      console.warn('Could not autoplay background music:', e);
+    });
+    musicStarted = true;
+  }
+
   rAF = requestAnimationFrame(loop);
 }
+
 
 function updatePreview() {
   const canvasNext = document.createElement('canvas');
@@ -543,14 +581,13 @@ if (lineCount > highLines) {
     }
     context.globalAlpha = 1.0;
 
-    let fallDelay = 50;
-    if (speedMode) {
-      fallDelay = Math.max(5, 90 - Math.floor(score / 100));
-    }
+  let fallDelay = speedMode ? 8 : 80; // fixed speeds for each mode
+
 
     if (++count > fallDelay) {
       tetromino.row++;
       count = 0;
+      
       if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
         tetromino.row--;
         placeTetromino();
@@ -620,7 +657,7 @@ function updatePauseMenuStats() {
     }
   }
 
-  if (e.which === 38) {
+  if (e.which === 38 || e.code === 'KeyD') {
     const rotated = rotate(tetromino.matrix);
     if (isValidMove(rotated, tetromino.row, tetromino.col)) {
       tetromino.matrix = rotated;
@@ -685,6 +722,22 @@ function updatePauseMenuStats() {
   }
 });
 
+
+document.addEventListener('keydown', (e) => {
+  if (paused || gameOver || isClearing) return;
+
+  switch (e.key) {
+    case 's': // Rotate counter-clockwise
+      const ccwMatrix = rotateCounterClockwise(tetromino.matrix);
+      if (isValidMove(ccwMatrix, tetromino.row, tetromino.col)) {
+        tetromino.matrix = ccwMatrix;
+        playSound('rotate');
+      }
+      break;
+  }
+});
+
+
 toggleHold.addEventListener('change', () => {
   const value = toggleHold.checked;
   document.getElementById('hold').style.display = value ? 'flex' : 'none';
@@ -722,8 +775,6 @@ window.addEventListener('load', () => {
 rAF = requestAnimationFrame(loop);
 
 
-let speedMode = false;
-const speedToggle = document.getElementById('speed-mode-toggle');
 
 window.addEventListener('load', () => {
   // ...existing code
@@ -791,6 +842,14 @@ toggleMusic.addEventListener('change', () => {
     backgroundMusic.pause();
   }
 });
+
+if (musicEnabled && !gameOver) {
+  backgroundMusic.play().catch(e => {
+    console.warn('Could not autoplay background music:', e);
+  });
+  musicStarted = true;
+}
+
 
 toggleShake.addEventListener('change', () => {
   shakeEnabled = toggleShake.checked;

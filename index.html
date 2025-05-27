@@ -12,7 +12,30 @@
     <div id="containers">
         <div id="pause-menu" class="hidden">
   <h2>Paused</h2>
-  <p class="header">Options</p>
+
+  <div id="controls">
+  <p class='header'>Controls:</p>
+  
+  <p>
+    ←/→           - Move Left/Right
+        <br>
+    ↑/D - Rotate Clockwise
+        <br>
+    S - Rotate Counter-Clockwise
+        <br>    
+    ↓ - Soft drop
+        <br>
+    Space - Harddrop
+        <br>
+    Shift - Hold/Call
+        <br>
+    Escape - Pause/Unpause
+  </p>
+</div>
+  <hr>
+
+  <div id="settings">
+  <p class="header">Options:</p>
   <label><input type="checkbox" id="toggle-hold" checked> Show Hold</label>
   <label><input type="checkbox" id="toggle-next" checked> Show Next</label>
   <label><input type="checkbox" id="toggle-info" checked> Show Info</label>
@@ -24,18 +47,26 @@
   <input type="checkbox" id="toggle-shake" checked>
   Matrix Bounce
 </label>
+
+</div>
    <hr>
-   <p class="header">High Scores</p>
+
+<div id="controls">
+   <p class="header">High Scores:</p>
  <div id="pause-highs"></div>
  <button class="reset" onclick="resetHighStats()">Reset Stats</button>
+
+</div>
    <hr>
+
+<div id="controls">
    <p class="header">Game Modifiers</p>
-  <label class="speed-mode-toggle">
+  <label  class="speed-mode-toggle">
   <input type="checkbox" id="speed-mode-toggle" />
-  No Speed Increase
+  Hard Mode
 </label>
   <button id="unify-colors">Set All Colors to White</button>
-</div>
+</div></div>
 <div id="game-container" style="position: relative;">
   <canvas id="game" width="320" height="640"></canvas>
 </div>
