@@ -921,3 +921,30 @@ canvas.addEventListener('touchend', (e) => {
     }
   }
 }, { passive: true });
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    // Save the initial time and positions for two-finger tap
+    canvas.dataset.twoFingerTapStart = Date.now();
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchend', (e) => {
+  if (e.touches.length === 0 && e.changedTouches.length === 2) {
+    const tapDuration = Date.now() - (canvas.dataset.twoFingerTapStart || 0);
+    if (tapDuration < 300) {
+      // Toggle pause menu
+      paused = !paused;
+      playSound('pause');
+      pauseMenu.classList.toggle('hidden', !paused);
+
+      if (paused) {
+        if (musicEnabled) backgroundMusic.pause();
+        createColorPickers();
+        updatePauseMenuStats();
+      } else {
+        if (musicEnabled) backgroundMusic.play();
+      }
+    }
+  }
+}, { passive: true });
