@@ -70,8 +70,21 @@ function startBackgroundMusic() {
 
 
 const volumeSlider = document.getElementById('volume-slider');
+const volumePercentage = document.getElementById('volume-percentage');
 let globalVolume = parseFloat(localStorage.getItem('globalVolume')) || 0.5;
+
 volumeSlider.value = globalVolume;
+volumePercentage.textContent = Math.round(globalVolume * 100) + '%';
+
+// Update percentage and volume on slider change
+volumeSlider.addEventListener('input', () => {
+  globalVolume = parseFloat(volumeSlider.value);
+  localStorage.setItem('globalVolume', globalVolume);
+  volumePercentage.textContent = Math.round(globalVolume * 100) + '%';
+
+  backgroundMusic.volume = musicEnabled ? globalVolume : 0;
+});
+
 
 // Set initial volume for background music
 backgroundMusic.volume = musicEnabled ? globalVolume : 0;
@@ -90,8 +103,11 @@ function advanceTetromino() {
 function playSound(sound) {
   const s = sounds[sound].cloneNode();
   s.volume = globalVolume;
-  s.play();
+  s.play().catch(err => {
+    console.warn('Sound play failed:', err);
+  });
 }
+
 
 
 toggleHold.addEventListener('change', () => {
@@ -829,7 +845,6 @@ volumeSlider.addEventListener('input', () => {
   localStorage.setItem('globalVolume', globalVolume);
   backgroundMusic.volume = musicEnabled ? globalVolume : 0;
 });
-
 
 let touchStartX = 0;
 let touchStartY = 0;
