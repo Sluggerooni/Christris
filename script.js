@@ -929,6 +929,25 @@ canvas.addEventListener('touchstart', (e) => {
   }
 }, { passive: true });
 
+pauseMenu.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    pauseMenu.dataset.twoFingerTapStart = Date.now();
+  }
+}, { passive: true });
+
+pauseMenu.addEventListener('touchend', (e) => {
+  if (e.touches.length === 0 && e.changedTouches.length === 2) {
+    const tapDuration = Date.now() - (pauseMenu.dataset.twoFingerTapStart || 0);
+    if (tapDuration < 300) {
+      paused = false;
+      playSound('pause');
+      pauseMenu.classList.add('hidden');
+      if (musicEnabled) backgroundMusic.play();
+    }
+  }
+}, { passive: true });
+
+
 canvas.addEventListener('touchend', (e) => {
   if (e.touches.length === 0 && e.changedTouches.length === 2) {
     const tapDuration = Date.now() - (canvas.dataset.twoFingerTapStart || 0);
