@@ -70,8 +70,21 @@ function startBackgroundMusic() {
 
 
 const volumeSlider = document.getElementById('volume-slider');
+const volumePercentage = document.getElementById('volume-percentage');
 let globalVolume = parseFloat(localStorage.getItem('globalVolume')) || 0.5;
+
 volumeSlider.value = globalVolume;
+volumePercentage.textContent = Math.round(globalVolume * 100) + '%';
+
+// Update percentage and volume on slider change
+volumeSlider.addEventListener('input', () => {
+  globalVolume = parseFloat(volumeSlider.value);
+  localStorage.setItem('globalVolume', globalVolume);
+  volumePercentage.textContent = Math.round(globalVolume * 100) + '%';
+
+  backgroundMusic.volume = musicEnabled ? globalVolume : 0;
+});
+
 
 // Set initial volume for background music
 backgroundMusic.volume = musicEnabled ? globalVolume : 0;

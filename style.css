@@ -326,3 +326,9 @@ canvas#game {
   padding: 5px;
   width: 100%;
 }
+
+#volume-control {
+  display: flex;
+ align-items: center;
+  transform: translate(-9%, 0%);
+}
