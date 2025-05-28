@@ -94,16 +94,14 @@ p {
 
 #next canvas {
   display: block;
-  margin: auto;
-  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 0px solid white;
-  margin-left: 10px;
   height: 120px;
   width: 120px;
-  transform: translate(0%, 30%);
+  transform: translate(13%, 30%);
+  margin:0px
 }
 
 
@@ -114,7 +112,7 @@ p {
   align-items: center;
   justify-content: center;
   border: 3px solid white;
-  height: 480px;
+  height: 477px;
   width: 100px;
 
   display: flex;

@@ -19,13 +19,18 @@ let lockCounter = 0;
 let isTouchingGround = false;
 const toggleMusic = document.getElementById('toggle-music');
 const toggleShake = document.getElementById('toggle-shake');
-let musicEnabled = toggleMusic.checked;
+let musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+toggleMusic.checked = musicEnabled;
+
 let shakeEnabled = toggleShake.checked;
 let highScore = parseInt(localStorage.getItem('highScore')) || 0;
 let highCombo = parseInt(localStorage.getItem('highCombo')) || 0;
 let highLines = parseInt(localStorage.getItem('highLines')) || 0;
 const speedToggle = document.getElementById('speed-mode-toggle');
 let speedMode = speedToggle.checked;
+
+
+
 
 speedToggle.addEventListener('change', () => {
   speedMode = speedToggle.checked;
@@ -54,13 +59,23 @@ backgroundMusic.volume = 0.2;
 let musicStarted = false;
 
 function startBackgroundMusic() {
-  if (!musicStarted && !gameOver && musicEnabled) {
+  if (!musicStarted && !gameOver && musicEnabled && globalVolume > 0) {
+    backgroundMusic.volume = globalVolume;
     backgroundMusic.play().catch((e) => {
       console.warn('Autoplay blocked until user interacts:', e);
     });
     musicStarted = true;
   }
 }
+
+
+const volumeSlider = document.getElementById('volume-slider');
+let globalVolume = parseFloat(localStorage.getItem('globalVolume')) || 0.5;
+volumeSlider.value = globalVolume;
+
+// Set initial volume for background music
+backgroundMusic.volume = musicEnabled ? globalVolume : 0;
+
 
 document.addEventListener('click', startBackgroundMusic, { once: true });
 document.addEventListener('keydown', startBackgroundMusic, { once: true });
@@ -74,8 +89,10 @@ function advanceTetromino() {
 
 function playSound(sound) {
   const s = sounds[sound].cloneNode();
+  s.volume = globalVolume;
   s.play();
 }
+
 
 toggleHold.addEventListener('change', () => {
   document.getElementById('hold').style.display = toggleHold.checked ? 'flex' : 'none';
@@ -121,6 +138,8 @@ function shakeCanvas(direction) {
     container.style.transform = 'translate(0, 0)';
   }, 80);
 }
+
+
 
 const defaultColors = {
   'I': 'Cyan',
@@ -478,7 +497,7 @@ function loop() {
       context.fillRect(0, row * grid, 10 * grid, grid - 1);
     }
 
-    if (clearAnimationFrame > 20) {
+    if (clearAnimationFrame > 40) {
       clearingLines.sort((a, b) => a - b);
 
       for (let i = 0; i < clearingLines.length; i++) {
@@ -792,4 +811,21 @@ if (musicEnabled && !gameOver) {
 
 toggleShake.addEventListener('change', () => {
   shakeEnabled = toggleShake.checked;
+});
+
+toggleMusic.addEventListener('change', () => {
+  musicEnabled = toggleMusic.checked;
+  localStorage.setItem('musicEnabled', musicEnabled);
+
+  if (musicEnabled && !paused && !gameOver) {
+    backgroundMusic.play().catch(e => console.warn('Could not play music:', e));
+  } else {
+    backgroundMusic.pause();
+  }
+});
+
+volumeSlider.addEventListener('input', () => {
+  globalVolume = parseFloat(volumeSlider.value);
+  localStorage.setItem('globalVolume', globalVolume);
+  backgroundMusic.volume = musicEnabled ? globalVolume : 0;
 });
