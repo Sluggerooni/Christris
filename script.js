@@ -29,7 +29,11 @@ let highLines = parseInt(localStorage.getItem('highLines')) || 0;
 const speedToggle = document.getElementById('speed-mode-toggle');
 let speedMode = speedToggle.checked;
 
-
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+const swipeThreshold = 30; // Minimum distance for a swipe
 
 
 speedToggle.addEventListener('change', () => {
@@ -601,6 +605,7 @@ function updatePauseMenuStats() {
 }
 
 
+
 document.addEventListener('keydown', function (e) {
   if (e.code === 'Escape') {
     paused = !paused;
@@ -749,6 +754,45 @@ window.addEventListener('load', () => {
 
 });
 
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchend', (e) => {
+  touchEndX = e.changedTouches[0].clientX;
+  touchEndY = e.changedTouches[0].clientY;
+
+  const deltaX = touchEndX - touchStartX;
+  const deltaY = touchEndY - touchStartY;
+
+  const absX = Math.abs(deltaX);
+  const absY = Math.abs(deltaY);
+
+  if (absX < swipeThreshold && absY < swipeThreshold) {
+    // Tap
+    rotateTetromino(); // function you use to rotate (assumed already defined)
+    return;
+  }
+
+  if (absX > absY) {
+    if (deltaX > 0) {
+      moveRight(); // implement or call your right move logic
+    } else {
+      moveLeft(); // implement or call your left move logic
+    }
+  } else {
+    if (deltaY > 0) {
+      hardDrop(); // implement or call your hard drop logic
+    } else {
+      holdTetromino(); // implement or call your hold/recall logic
+    }
+  }
+}, { passive: true });
+
+
 rAF = requestAnimationFrame(loop);
 
 window.addEventListener('load', () => {
@@ -843,46 +887,3 @@ volumeSlider.addEventListener('input', () => {
   backgroundMusic.volume = musicEnabled ? globalVolume : 0;
 });
 
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-const swipeThreshold = 30; // Minimum distance for a swipe
-
-canvas.addEventListener('touchstart', (e) => {
-  if (e.touches.length === 1) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }
-}, { passive: true });
-
-canvas.addEventListener('touchend', (e) => {
-  touchEndX = e.changedTouches[0].clientX;
-  touchEndY = e.changedTouches[0].clientY;
-
-  const deltaX = touchEndX - touchStartX;
-  const deltaY = touchEndY - touchStartY;
-
-  const absX = Math.abs(deltaX);
-  const absY = Math.abs(deltaY);
-
-  if (absX < swipeThreshold && absY < swipeThreshold) {
-    // Tap
-    rotateTetromino(); // function you use to rotate (assumed already defined)
-    return;
-  }
-
-  if (absX > absY) {
-    if (deltaX > 0) {
-      moveRight(); // implement or call your right move logic
-    } else {
-      moveLeft(); // implement or call your left move logic
-    }
-  } else {
-    if (deltaY > 0) {
-      hardDrop(); // implement or call your hard drop logic
-    } else {
-      holdTetromino(); // implement or call your hold/recall logic
-    }
-  }
-}, { passive: true });
