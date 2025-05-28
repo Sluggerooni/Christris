@@ -29,11 +29,7 @@ let highLines = parseInt(localStorage.getItem('highLines')) || 0;
 const speedToggle = document.getElementById('speed-mode-toggle');
 let speedMode = speedToggle.checked;
 
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-const swipeThreshold = 30; // Minimum distance for a swipe
+
 
 
 speedToggle.addEventListener('change', () => {
@@ -74,21 +70,8 @@ function startBackgroundMusic() {
 
 
 const volumeSlider = document.getElementById('volume-slider');
-const volumePercentage = document.getElementById('volume-percentage');
 let globalVolume = parseFloat(localStorage.getItem('globalVolume')) || 0.5;
-
 volumeSlider.value = globalVolume;
-volumePercentage.textContent = Math.round(globalVolume * 100) + '%';
-
-// Update percentage and volume on slider change
-volumeSlider.addEventListener('input', () => {
-  globalVolume = parseFloat(volumeSlider.value);
-  localStorage.setItem('globalVolume', globalVolume);
-  volumePercentage.textContent = Math.round(globalVolume * 100) + '%';
-
-  backgroundMusic.volume = musicEnabled ? globalVolume : 0;
-});
-
 
 // Set initial volume for background music
 backgroundMusic.volume = musicEnabled ? globalVolume : 0;
@@ -605,7 +588,6 @@ function updatePauseMenuStats() {
 }
 
 
-
 document.addEventListener('keydown', function (e) {
   if (e.code === 'Escape') {
     paused = !paused;
@@ -754,45 +736,6 @@ window.addEventListener('load', () => {
 
 });
 
-canvas.addEventListener('touchstart', (e) => {
-  if (e.touches.length === 1) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }
-}, { passive: true });
-
-canvas.addEventListener('touchend', (e) => {
-  touchEndX = e.changedTouches[0].clientX;
-  touchEndY = e.changedTouches[0].clientY;
-
-  const deltaX = touchEndX - touchStartX;
-  const deltaY = touchEndY - touchStartY;
-
-  const absX = Math.abs(deltaX);
-  const absY = Math.abs(deltaY);
-
-  if (absX < swipeThreshold && absY < swipeThreshold) {
-    // Tap
-    rotateTetromino(); // function you use to rotate (assumed already defined)
-    return;
-  }
-
-  if (absX > absY) {
-    if (deltaX > 0) {
-      moveRight(); // implement or call your right move logic
-    } else {
-      moveLeft(); // implement or call your left move logic
-    }
-  } else {
-    if (deltaY > 0) {
-      hardDrop(); // implement or call your hard drop logic
-    } else {
-      holdTetromino(); // implement or call your hold/recall logic
-    }
-  }
-}, { passive: true });
-
-
 rAF = requestAnimationFrame(loop);
 
 window.addEventListener('load', () => {
@@ -887,3 +830,94 @@ volumeSlider.addEventListener('input', () => {
   backgroundMusic.volume = musicEnabled ? globalVolume : 0;
 });
 
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+const swipeThreshold = 30;
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchend', (e) => {
+  if (gameOver || paused || isClearing) return;
+
+  touchEndX = e.changedTouches[0].clientX;
+  touchEndY = e.changedTouches[0].clientY;
+
+  const deltaX = touchEndX - touchStartX;
+  const deltaY = touchEndY - touchStartY;
+  const absX = Math.abs(deltaX);
+  const absY = Math.abs(deltaY);
+
+  if (absX < swipeThreshold && absY < swipeThreshold) {
+    // Tap → rotate
+    const rotated = rotate(tetromino.matrix);
+    if (isValidMove(rotated, tetromino.row, tetromino.col)) {
+      tetromino.matrix = rotated;
+      lockStartTime = null;
+      isTouchingGround = false;
+      playSound('rotate');
+    } else {
+      const kicks = [-1, 1, -2, 2];
+      for (let i = 0; i < kicks.length; i++) {
+        const newCol = tetromino.col + kicks[i];
+        if (isValidMove(rotated, tetromino.row, newCol)) {
+          tetromino.col = newCol;
+          tetromino.matrix = rotated;
+          lockStartTime = null;
+          isTouchingGround = false;
+          playSound('rotate');
+          break;
+        }
+      }
+    }
+    return;
+  }
+
+  if (absX > absY) {
+    // Horizontal swipe → move left or right
+    const newCol = deltaX > 0 ? tetromino.col + 1 : tetromino.col - 1;
+    if (isValidMove(tetromino.matrix, tetromino.row, newCol)) {
+      tetromino.col = newCol;
+      playSound('move');
+    } else {
+      shakeCanvas(deltaX > 0 ? 'right' : 'left');
+    }
+  } else {
+    if (deltaY > 0) {
+      // Swipe down → hard drop
+      while (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
+        tetromino.row++;
+      }
+      playSound('harddrop');
+      shakeCanvas('down');
+      placeTetromino();
+    } else {
+      // Swipe up → hold
+      if (!heldThisTurn) {
+        if (!hold) {
+          playSound('hold');
+          hold = tetromino;
+          tetromino = nextTetromino;
+          nextTetrominos.push(getNextTetromino());
+          nextTetromino = nextTetrominos.shift();
+        } else {
+          [tetromino, hold] = [hold, tetromino];
+          playSound('hold');
+        }
+
+        tetromino.row = tetromino.name === 'I' ? -1 : -2;
+        tetromino.col = Math.floor(playfield[0].length / 2 - Math.ceil(tetromino.matrix[0].length / 2));
+        heldThisTurn = true;
+        updateHoldDisplay();
+        updatePreview();
+      }
+    }
+  }
+}, { passive: true });
