@@ -34,7 +34,7 @@ const defaultKeyBindings = {
   moveLeft: 'ArrowLeft',
   moveRight: 'ArrowRight',
   softDrop: 'ArrowDown',
-  hardDrop: 'Space',
+  hardDrop: '',
   rotateCW: 'ArrowUp',
   rotateCCW: 's',
   hold: 'Shift'
