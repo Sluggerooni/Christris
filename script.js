@@ -734,19 +734,6 @@ document.addEventListener('keydown', function (e) {
 
 });
 
-document.addEventListener('keydown', (e) => {
-  if (paused || gameOver || isClearing) return;
-
-  switch (e.key) {
-    case 's':
-      const ccwMatrix = rotateCounterClockwise(tetromino.matrix);
-      if (isValidMove(ccwMatrix, tetromino.row, tetromino.col)) {
-        tetromino.matrix = ccwMatrix;
-        playSound('rotate');
-      }
-      break;
-  }
-});
 
 toggleHold.addEventListener('change', () => {
   const value = toggleHold.checked;
