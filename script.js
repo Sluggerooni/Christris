@@ -150,7 +150,7 @@ function shakeCanvas(direction) {
 
   if (!shakeEnabled) return;
 
-  const container = document.getElementById('game-container');
+  const container = document.getElementById('containers');
   let transform;
 
   if (direction === 'left') {
