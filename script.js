@@ -152,16 +152,19 @@ function shakeCanvas(direction) {
   if (!shakeEnabled) return;
 
   const container = document.getElementById('containers');
-  let transform;
 
-  if (direction === 'left') {
-    transform = 'translateX(-8px)';
-  } else if (direction === 'right') {
-    transform = 'translateX(8px)';
-  } else if (direction === 'down') {
-    transform = 'translateY(11px)';
-  } else {
-    transform = 'none';
+  if (direction === 'down') {
+    // Instantly apply shift with no transition
+    container.style.transition = 'none';
+    container.style.transform = 'translateY(5px)';
+
+    // Then animate back up smoothly
+    requestAnimationFrame(() => {
+      container.style.transition = 'transform 900ms ease-out';
+      container.style.transform = 'translateY(0)';
+    });
+
+    return;
   }
 
   // Separate handling for left/right collision animation
@@ -169,10 +172,13 @@ function shakeCanvas(direction) {
   const offset = direction === 'left' ? -8 : 8;
   container.style.transform = `translateX(${offset}px)`;
 
-  setTimeout(() => {
-    container.style.transform = 'translate(0, 0)';
-  }, 60);
+  // Animate back to center with different speed
+  requestAnimationFrame(() => {
+    container.style.transition = 'transform 300ms ease-out'; // faster than down
+    container.style.transform = 'translateX(0)';
+  });
 }
+
 
 
 
