@@ -250,7 +250,7 @@ canvas#game {
 }
 
 #game-container {
-  transition: transform 400ms;
+  transition: transform 60ms;
 }
 
 #containers {
