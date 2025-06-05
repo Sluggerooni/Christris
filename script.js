@@ -34,7 +34,7 @@ const defaultKeyBindings = {
   moveLeft: 'ArrowLeft',
   moveRight: 'ArrowRight',
   softDrop: 'ArrowDown',
-  hardDrop: 'Space',
+  hardDrop: ' ',  
   rotateCW: 'ArrowUp',
   rotateCCW: 's',
   hold: 'Shift'
@@ -55,7 +55,7 @@ speedToggle.addEventListener('change', () => {
 
 
 let lastCollisionTime = 0;
-const collisionCooldown = 300;
+const collisionCooldown = 200;
 
 const sounds = {
   move: new Audio('sounds/move.mp3'),
@@ -138,37 +138,48 @@ toggleHold.checked = true;
 toggleNext.checked = true;
 toggleInfo.checked = true;
 
+
 function shakeCanvas(direction) {
   const now = Date.now();
   if (now - lastCollisionTime < collisionCooldown) return;
 
   lastCollisionTime = now;
+
   if (direction === 'left' || direction === 'right') {
     playSound('collision');
   }
 
-
   if (!shakeEnabled) return;
 
-  const container = document.getElementById('game-container');
-  let transform;
+  const container = document.getElementById('containers');
 
-  if (direction === 'left') {
-    transform = 'translateX(-8px)';
-  } else if (direction === 'right') {
-    transform = 'translateX(8px)';
-  } else if (direction === 'down') {
-    transform = 'translateY(8px)';
-  } else {
-    transform = 'none';
+  if (direction === 'down') {
+    // Instantly apply shift with no transition
+    container.style.transition = 'none';
+    container.style.transform = 'translateY(5px)';
+
+    // Then animate back up smoothly
+    requestAnimationFrame(() => {
+      container.style.transition = 'transform 900ms ease-out';
+      container.style.transform = 'translateY(0)';
+    });
+
+    return;
   }
 
-  container.style.transform = transform;
+  // Separate handling for left/right collision animation
+  container.style.transition = 'none'; // remove previous transition
+  const offset = direction === 'left' ? -8 : 8;
+  container.style.transform = `translateX(${offset}px)`;
 
-  setTimeout(() => {
-    container.style.transform = 'translate(0, 0)';
-  }, 50);
+  // Animate back to center with different speed
+  requestAnimationFrame(() => {
+    container.style.transition = 'transform 300ms ease-out'; // faster than down
+    container.style.transform = 'translateX(0)';
+  });
 }
+
+
 
 
 
@@ -255,10 +266,10 @@ for (let row = -2; row < 20; row++) {
 }
 
 const tetrominos = {
-  'I': [[0, 1, 0, 0],
-        [0, 1, 0, 0],
-        [0, 1, 0, 0],
-        [0, 1, 0, 0]],
+  'I': [[1, 1, 1, 1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]],
 
   'J': [[1, 0, 0],
         [1, 1, 1],
@@ -500,6 +511,7 @@ function updateHoldDisplay() {
   const color = colors[hold.name];
   const blockSize = 30;
 
+  
   ctxHold.fillStyle = color;
   for (let r = 0; r < matrix.length; r++) {
     for (let c = 0; c < matrix[r].length; c++) {
@@ -721,16 +733,6 @@ document.addEventListener('keydown', function (e) {
   });
 
   if (gameOver || paused || isClearing) return;
-
-
-
-
-  
-
-
-
-  
-
 
 });
 
