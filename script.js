@@ -1197,3 +1197,28 @@ function handleKeyAction(key) {
   }
 
 }
+
+// ...existing code...
+document.getElementById('bg-upload').addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    document.body.style.backgroundImage = `url('${event.target.result}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    // Optionally save to localStorage for persistence
+    localStorage.setItem('customBg', event.target.result);
+  };
+  reader.readAsDataURL(file);
+});
+
+// On page load, restore background if set
+window.addEventListener('load', () => {
+  const savedBg = localStorage.getItem('customBg');
+  if (savedBg) {
+    document.body.style.backgroundImage = `url('${savedBg}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+  }
+});
