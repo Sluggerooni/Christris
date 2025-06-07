@@ -1377,3 +1377,41 @@ window.addEventListener('beforeunload', () => {
   if (scaryTimeout) clearTimeout(scaryTimeout);
   if (scaryOverlay && scaryOverlay.parentNode) scaryOverlay.parentNode.removeChild(scaryOverlay);
 });
+
+
+document.getElementById('bg-upload').addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    document.body.style.backgroundImage = `url('${event.target.result}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundAttachment = 'fixed';
+    // Save to localStorage for persistence
+    localStorage.setItem('customBg', event.target.result);
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('bg-reset').addEventListener('click', () => {
+  document.body.style.backgroundImage = '';
+  document.body.style.backgroundSize = '';
+  document.body.style.backgroundPosition = '';
+  document.body.style.backgroundRepeat = '';
+  document.body.style.backgroundAttachment = '';
+  localStorage.removeItem('customBg');
+});
+
+// On page load, restore background if set
+window.addEventListener('load', () => {
+  const savedBg = localStorage.getItem('customBg');
+  if (savedBg) {
+    document.body.style.backgroundImage = `url('${savedBg}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundAttachment = 'fixed';
+  }
+});

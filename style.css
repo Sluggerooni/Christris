@@ -15,6 +15,13 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+    background: #111;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  
 }
 
 canvas {
