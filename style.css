@@ -406,5 +406,9 @@ width: 105%;
 }
 
 #music-section{
-  margin:0px;
+  margin:0;
+}
+
+#music-select-section{
+  margin: 0;
 }
