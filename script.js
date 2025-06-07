@@ -14,9 +14,11 @@ let isClearing = false;
 let hardDropped = false;
 let lastCollisionSoundTime = 0;
 const collisionSoundCooldown = 800;
-let lockDelayFrames = 120;
-let lockCounter = 0;
+const finesseDelay = 500; // milliseconds
+let lockStartTime = null;
+const lockDelay = 500; // milliseconds
 let isTouchingGround = false;
+let framesSinceLastMove = 0;
 const toggleMusic = document.getElementById('toggle-music');
 const toggleShake = document.getElementById('toggle-shake');
 let musicEnabled = localStorage.getItem('musicEnabled') === 'true';
@@ -29,6 +31,12 @@ const speedToggle = document.getElementById('speed-mode-toggle');
 let speedMode = speedToggle.checked;
 const toggleClearAnimation = document.getElementById('toggle-clear-animation');
 let clearAnimationEnabled = toggleClearAnimation.checked;
+const keysPressed = {};
+const keyRepeatTimers = {};
+const initialDelay = 200; // delay before repeat starts (in ms)
+const repeatInterval = 30; // repeat rate (in ms)
+
+
 
 const defaultKeyBindings = {
   moveLeft: 'ArrowLeft',
@@ -112,6 +120,8 @@ function advanceTetromino() {
   tetromino = nextTetromino;
   nextTetrominos.push(getNextTetromino());
   nextTetromino = nextTetrominos.shift();
+  finesseFrames = MAX_FINESSE_FRAMES;
+  framesSinceLastMove = 0;
   updatePreview();
 }
 
@@ -156,7 +166,7 @@ function shakeCanvas(direction) {
   if (direction === 'down') {
     // Instantly apply shift with no transition
     container.style.transition = 'none';
-    container.style.transform = 'translateY(5px)';
+    container.style.transform = 'translateY(8px)';
 
     // Then animate back up smoothly
     requestAnimationFrame(() => {
@@ -178,10 +188,6 @@ function shakeCanvas(direction) {
     container.style.transform = 'translateX(0)';
   });
 }
-
-
-
-
 
 
 const defaultColors = {
@@ -453,6 +459,7 @@ function resetGame() {
   combo = 0;
   lineCount = 0;
   gameOver = false;
+  finesseFrames = MAX_FINESSE_FRAMES; // Reset finesse frames
   updateInfo();
   updatePreview();
   updateHoldDisplay();
@@ -541,6 +548,23 @@ let lineCount = 0;
 updateInfo();
 updatePreview();
 
+function checkTouchingGround() {
+  const nextRow = tetromino.row + 1;
+  if (!isValidMove(tetromino.matrix, nextRow, tetromino.col)) {
+    if (!isTouchingGround) {
+      lockCounter = 0;
+    }
+    isTouchingGround = true;
+  } else {
+    isTouchingGround = false;
+    lockCounter = 0; // reset if no longer touching
+  }
+}
+
+
+const MAX_FINESSE_FRAMES = 180; // or whatever value you want (30~50 is typical)
+let finesseFrames = MAX_FINESSE_FRAMES;
+
 function loop() {
   rAF = requestAnimationFrame(loop);
   if (paused || gameOver) return;
@@ -572,7 +596,7 @@ function loop() {
       finalizeLineClear();
     }
 
-    if (clearAnimationFrame > 22) {
+    if (clearAnimationFrame > 110) {
       clearingLines.sort((a, b) => a - b);
 
       for (let i = 0; i < clearingLines.length; i++) {
@@ -642,14 +666,24 @@ function loop() {
       fallDelay = baseSpeed;
     }
 
-
-    if (++count > fallDelay) {
-      tetromino.row++;
-      count = 0;
-
-      if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
-        tetromino.row--;
+    // Finesse/Lock delay logic with fixed frames and inactivity check
+    if (isValidMove(tetromino.matrix, tetromino.row + 1, tetromino.col)) {
+      // Not touching ground, fall as normal
+      finesseFrames = MAX_FINESSE_FRAMES;
+      framesSinceLastMove = 0;
+      if (++count > fallDelay) {
+        tetromino.row++;
+        count = 0;
+      }
+    } else {
+      // Touching ground
+      finesseFrames--;
+      framesSinceLastMove++;
+      if (finesseFrames <= 0 || framesSinceLastMove >= 60) {
         placeTetromino();
+        finesseFrames = MAX_FINESSE_FRAMES;
+        framesSinceLastMove = 0;
+        count = 0;
       }
     }
 
@@ -718,26 +752,37 @@ document.addEventListener('keydown', function (e) {
   `;
   }
 
-  document.addEventListener('keydown', (e) => {
-    if (paused || gameOver || [e.code]) return;
+document.addEventListener('keydown', (e) => {
+  if (paused || gameOver || isClearing || waitingForKey) return;
 
-    keysHeld[e.code] = true;
+  const key = e.key;
 
-    handleKeyPress(e.code);
-    keyRepeatTimers[e.code] = {
-      delayTimer: setTimeout(() => {
-        keyRepeatTimers[e.code].repeatInterval = setInterval(() => {
-          handleKeyPress(e.code);
-        }, repeatRate);
-      }, repeatDelay)
-    };
-  });
+  if (keysPressed[key]) return; // Already handled, don't re-trigger
+  keysPressed[key] = true;
+
+  handleKeyAction(key); // immediate response
+
+  // Start repeat after initial delay
+  keyRepeatTimers[key] = setTimeout(() => {
+    keyRepeatTimers[key] = setInterval(() => {
+      handleKeyAction(key);
+    }, repeatInterval);
+  }, initialDelay);
+});
 
   if (gameOver || paused || isClearing) return;
 
 });
+document.addEventListener('keyup', (e) => {
+  const key = e.key;
+  keysPressed[key] = false;
 
-
+  if (keyRepeatTimers[key]) {
+    clearTimeout(keyRepeatTimers[key]);
+    clearInterval(keyRepeatTimers[key]);
+    delete keyRepeatTimers[key];
+  }
+});
 toggleHold.addEventListener('change', () => {
   const value = toggleHold.checked;
   document.getElementById('hold').style.display = value ? 'flex' : 'none';
@@ -768,8 +813,6 @@ window.addEventListener('load', () => {
   document.getElementById('hold').style.display = holdVisible ? 'flex' : 'none';
   document.getElementById('next').style.display = nextVisible ? 'flex' : 'none';
   document.getElementById('info').style.display = infoVisible ? 'flex' : 'none';
-
-
 });
 
 rAF = requestAnimationFrame(loop);
@@ -1039,28 +1082,7 @@ document.addEventListener('keydown', (e) => {
 
   const key = e.key;
 
-  // Move Left / Right
-  if (key === keyBindings.moveLeft) {
-    const newCol = tetromino.col - 1;
-    if (isValidMove(tetromino.matrix, tetromino.row, newCol)) {
-      tetromino.col = newCol;
-      playSound('move');
-    } else {
-      shakeCanvas('left');
-    }
-    return;
-  }
 
-  if (key === keyBindings.moveRight) {
-    const newCol = tetromino.col + 1;
-    if (isValidMove(tetromino.matrix, tetromino.row, newCol)) {
-      tetromino.col = newCol;
-      playSound('move');
-    } else {
-      shakeCanvas('right');
-    }
-    return;
-  }
 
   // Soft Drop
   if (key === keyBindings.softDrop) {
@@ -1144,9 +1166,36 @@ document.addEventListener('keydown', (e) => {
 });
 
 
-
 document.getElementById('reset-bindings').addEventListener('click', () => {
   keyBindings = { ...defaultKeyBindings };
   localStorage.setItem('keyBindings', JSON.stringify(keyBindings));
   updateKeyBindingDisplay();
 });
+function handleKeyAction(key) {
+  if (key === keyBindings.moveLeft) {
+    const newCol = tetromino.col - 1;
+    if (isValidMove(tetromino.matrix, tetromino.row, newCol)) {
+      tetromino.col = newCol;
+      playSound('move');
+      framesSinceLastMove = 0;
+    } else {
+      shakeCanvas('left');
+    }
+    return;
+  }
+
+  if (key === keyBindings.moveRight) {
+    const newCol = tetromino.col + 1;
+    if (isValidMove(tetromino.matrix, tetromino.row, newCol)) {
+      tetromino.col = newCol;
+      playSound('move');
+      framesSinceLastMove = 0;
+    } else {
+      shakeCanvas('right');
+    }
+    return;
+  }
+
+  // For rotateCW, rotateCCW, softDrop, hardDrop, hold, also add:
+  // framesSinceLastMove = 0;
+}
