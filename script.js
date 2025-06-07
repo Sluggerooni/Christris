@@ -1200,45 +1200,69 @@ function handleKeyAction(key) {
 
 }
 
-// ...existing code...
-document.getElementById('bg-upload').addEventListener('change', function (e) {
+// Music upload and reset logic
+const musicUploadInput = document.getElementById('music-upload');
+const resetMusicBtn = document.getElementById('reset-music');
+
+musicUploadInput.addEventListener('change', function (e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function (event) {
-    document.body.style.backgroundImage = `url('${event.target.result}')`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
-    // Optionally save to localStorage for persistence
-    localStorage.setItem('customBg', event.target.result);
+    backgroundMusic.src = event.target.result;
+    backgroundMusic.currentTime = 0;
+    if (musicEnabled && !paused && !gameOver) {
+      backgroundMusic.play().catch(() => {});
+    }
+    // Save to localStorage for persistence
+    localStorage.setItem('customMusic', event.target.result);
   };
   reader.readAsDataURL(file);
 });
 
-// On page load, restore background if set
+resetMusicBtn.addEventListener('click', () => {
+  backgroundMusic.src = 'sounds/Tetris.mp3';
+  backgroundMusic.currentTime = 0;
+  if (musicEnabled && !paused && !gameOver) {
+    backgroundMusic.play().catch(() => {});
+  }
+  localStorage.removeItem('customMusic');
+});
+
+// On page load, restore custom music if set
 window.addEventListener('load', () => {
-  const savedBg = localStorage.getItem('customBg');
-  if (savedBg) {
-    document.body.style.backgroundImage = `url('${savedBg}')`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
+  const savedMusic = localStorage.getItem('customMusic');
+  if (savedMusic) {
+    backgroundMusic.src = savedMusic;
+  } else {
+    backgroundMusic.src = 'sounds/Tetris.mp3';
   }
 });
 
-// Add this after your bg-upload input setup, or wherever you want the button to be created
-const bgResetBtn = document.createElement('button');
-bgResetBtn.textContent = 'Reset Background';
-bgResetBtn.id = 'bg-reset';
-bgResetBtn.style.marginLeft = '10px';
+// Preset music selection logic
+const presetMusicSelect = document.getElementById('preset-music');
+if (presetMusicSelect) {
+  presetMusicSelect.addEventListener('change', function () {
+    const selected = presetMusicSelect.value;
+    backgroundMusic.src = selected;
+    backgroundMusic.currentTime = 0;
+    if (musicEnabled && !paused && !gameOver) {
+      backgroundMusic.play().catch(() => {});
+    }
+    // Remove custom music if a preset is chosen
+    localStorage.removeItem('customMusic');
+    localStorage.setItem('selectedPresetMusic', selected);
+  });
 
-// Insert the button after the bg-upload input
-const bgUploadInput = document.getElementById('bg-upload');
-if (bgUploadInput && bgUploadInput.parentNode) {
-  bgUploadInput.parentNode.insertBefore(bgResetBtn, bgUploadInput.nextSibling);
+  // On load, restore selected preset if no custom music
+  window.addEventListener('load', () => {
+    const savedMusic = localStorage.getItem('customMusic');
+    if (!savedMusic) {
+      const preset = localStorage.getItem('selectedPresetMusic');
+      if (preset) {
+        presetMusicSelect.value = preset;
+        backgroundMusic.src = preset;
+      }
+    }
+  });
 }
-
-// Reset background handler
-bgResetBtn.addEventListener('click', () => {
-  document.body.style.backgroundImage = '';
-  localStorage.removeItem('customBg');
-});

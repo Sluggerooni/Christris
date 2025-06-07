@@ -106,9 +106,26 @@
 
             </div>
             <hr>
-                <p class="header">Customization:</p>
-<input type="file" id="bg-upload" accept="image/*">
 
+
+                <p class="header">Choose Background Image:</p>
+<input type="file" id="bg-upload" accept="image/*">
+<hr>
+<p class="header">Music:</p>
+<section id="music-section" style="margin: 20px 0;">
+  <label for="music-upload">Choose Background Music:</label>
+  <input type="file" id="music-upload" accept="audio/*">
+  <button id="reset-music" style="margin-left:10px;">Reset to Default Music</button>
+</section>
+
+
+<section id="music-select-section" style="margin: 20px 0;">
+  <label for="preset-music">Select Preset Music:</label>
+  <select id="preset-music">
+    <option value="sounds/Tetris.mp3">Classic Tetris</option>
+    <option value="sounds/phonk.mp3">Phonk</option>
+  </select>
+</section>
         </div>
         <div id="game-container" style="position: relative;">
             <canvas id="game" width="320" height="640"></canvas>
