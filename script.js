@@ -1318,7 +1318,7 @@ const SCARY_MAX_INTERVAL = 35000; // up to 35 seconds, adjust as desired
 
 // Replace with your own scary sound and image file paths
 const scarySound = new Audio('sounds/scary.mp3');
-const scaryImageUrl = 'images/scary.jpg';
+const scaryImageUrl = 'images/puppet.gif';
 
 scarySound.preload = 'auto';
 
