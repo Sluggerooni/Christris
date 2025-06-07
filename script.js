@@ -1306,3 +1306,74 @@ if (presetMusicSelect) {
     }
   });
 }
+
+
+
+const scaryModeToggle = document.getElementById('scary-mode-toggle');
+let scaryModeEnabled = false;
+let scaryTimeout = null;
+let scaryOverlay = null;
+const SCARY_MIN_INTERVAL = 15000; // 15 seconds
+const SCARY_MAX_INTERVAL = 35000; // up to 35 seconds, adjust as desired
+
+// Replace with your own scary sound and image file paths
+const scarySound = new Audio('sounds/scary.mp3');
+const scaryImageUrl = 'images/scary.jpg';
+
+scarySound.preload = 'auto';
+
+function showScaryOverlay(duration) {
+  if (!scaryOverlay) {
+    scaryOverlay = document.createElement('div');
+    scaryOverlay.style.position = 'fixed';
+    scaryOverlay.style.top = '0';
+    scaryOverlay.style.left = '0';
+    scaryOverlay.style.width = '100vw';
+    scaryOverlay.style.height = '100vh';
+    scaryOverlay.style.background = `black url('${scaryImageUrl}') center center / cover no-repeat`;
+    scaryOverlay.style.zIndex = '9999';
+    scaryOverlay.style.pointerEvents = 'none';
+    scaryOverlay.style.opacity = '1';
+    document.body.appendChild(scaryOverlay);
+  } else {
+    scaryOverlay.style.display = 'block';
+  }
+  setTimeout(() => {
+    if (scaryOverlay) scaryOverlay.style.display = 'none';
+  }, duration);
+}
+
+function triggerScaryEvent() {
+  // Play at 100% volume, ignoring user settings
+  scarySound.volume = 1.0;
+  scarySound.currentTime = 0;
+  scarySound.play().catch(() => {});
+  showScaryOverlay(scarySound.duration * 1000 || 2500);
+
+  // Schedule next event
+  if (scaryModeEnabled) {
+    const nextInterval = SCARY_MIN_INTERVAL + Math.random() * (SCARY_MAX_INTERVAL - SCARY_MIN_INTERVAL);
+    scaryTimeout = setTimeout(triggerScaryEvent, nextInterval);
+  }
+}
+
+scaryModeToggle.addEventListener('change', () => {
+  scaryModeEnabled = scaryModeToggle.checked;
+  if (scaryModeEnabled) {
+    // Start after a random interval
+    const firstInterval = SCARY_MIN_INTERVAL + Math.random() * (SCARY_MAX_INTERVAL - SCARY_MIN_INTERVAL);
+    scaryTimeout = setTimeout(triggerScaryEvent, firstInterval);
+  } else {
+    if (scaryTimeout) clearTimeout(scaryTimeout);
+    scaryTimeout = null;
+    if (scaryOverlay) scaryOverlay.style.display = 'none';
+    scarySound.pause();
+    scarySound.currentTime = 0;
+  }
+});
+
+// Optional: Clean up on page unload
+window.addEventListener('beforeunload', () => {
+  if (scaryTimeout) clearTimeout(scaryTimeout);
+  if (scaryOverlay && scaryOverlay.parentNode) scaryOverlay.parentNode.removeChild(scaryOverlay);
+});
