@@ -73,6 +73,10 @@ p {
 .lll{
   order: 9;
   width: 100px;
+  font-size: 8px;
+ align-self: flex-end;
+ justify-self: flex-end;
+ margin-bottom: 21px;
 }
 #hold {
   background: rgb(14, 14, 14);

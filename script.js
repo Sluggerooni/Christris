@@ -33,7 +33,7 @@ const toggleClearAnimation = document.getElementById('toggle-clear-animation');
 let clearAnimationEnabled = toggleClearAnimation.checked;
 const keysPressed = {};
 const keyRepeatTimers = {};
-const initialDelay = 200; // delay before repeat starts (in ms)
+const initialDelay = 150; // delay before repeat starts (in ms)
 const repeatInterval = 30; // repeat rate (in ms)
 
 
@@ -753,7 +753,7 @@ document.addEventListener('keydown', function (e) {
   }
 
 document.addEventListener('keydown', (e) => {
-  if (paused || gameOver || isClearing || waitingForKey) return;
+  if (paused || gameOver || waitingForKey) return; // <-- removed "|| isClearing"
 
   const key = e.key;
 
@@ -1078,7 +1078,7 @@ document.addEventListener('keydown', e => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (paused || gameOver || isClearing || waitingForKey) return;
+  if (paused || gameOver || waitingForKey) return;
 
   const key = e.key;
 
@@ -1196,6 +1196,4 @@ function handleKeyAction(key) {
     return;
   }
 
-  // For rotateCW, rotateCCW, softDrop, hardDrop, hold, also add:
-  // framesSinceLastMove = 0;
 }
