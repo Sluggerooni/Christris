@@ -127,7 +127,7 @@ function advanceTetromino() {
 
 function playSound(sound) {
   const s = sounds[sound].cloneNode();
-  s.volume = globalVolume;
+  s.volume = sfxVolume;
   s.play().catch(err => {
     console.warn('Sound play failed:', err);
   });
@@ -874,21 +874,61 @@ function resetHighStats() {
   updatePauseMenuStats();
 }
 
+// Music and SFX volume controls
+const musicVolumeSlider = document.getElementById('music-volume-slider');
+const musicVolumePercentage = document.getElementById('music-volume-percentage');
+const sfxVolumeSlider = document.getElementById('sfx-volume-slider');
+const sfxVolumePercentage = document.getElementById('sfx-volume-percentage');
+
+// Load or set default volumes
+let musicVolume = parseFloat(localStorage.getItem('musicVolume'));
+if (isNaN(musicVolume)) musicVolume = 0.5;
+let sfxVolume = parseFloat(localStorage.getItem('sfxVolume'));
+if (isNaN(sfxVolume)) sfxVolume = 0.5;
+
+musicVolumeSlider.value = musicVolume;
+musicVolumePercentage.textContent = Math.round(musicVolume * 100) + '%';
+sfxVolumeSlider.value = sfxVolume;
+sfxVolumePercentage.textContent = Math.round(sfxVolume * 100) + '%';
+
+backgroundMusic.volume = musicEnabled ? musicVolume : 0;
+
+// Update music volume
+musicVolumeSlider.addEventListener('input', () => {
+  musicVolume = parseFloat(musicVolumeSlider.value);
+  localStorage.setItem('musicVolume', musicVolume);
+  musicVolumePercentage.textContent = Math.round(musicVolume * 100) + '%';
+  backgroundMusic.volume = musicEnabled ? musicVolume : 0;
+});
+
+// Update SFX volume
+sfxVolumeSlider.addEventListener('input', () => {
+  sfxVolume = parseFloat(sfxVolumeSlider.value);
+  localStorage.setItem('sfxVolume', sfxVolume);
+  sfxVolumePercentage.textContent = Math.round(sfxVolume * 100) + '%';
+});
+
+// Update playSound to use sfxVolume
+function playSound(sound) {
+  const s = sounds[sound].cloneNode();
+  s.volume = sfxVolume;
+  s.play().catch(err => {
+    console.warn('Sound play failed:', err);
+  });
+}
+
+// When toggling music, use musicVolume
 toggleMusic.addEventListener('change', () => {
   musicEnabled = toggleMusic.checked;
-  if (musicEnabled && !paused) {
-    backgroundMusic.play();
+  localStorage.setItem('musicEnabled', musicEnabled);
+
+  backgroundMusic.volume = musicEnabled ? musicVolume : 0;
+  if (musicEnabled && !paused && !gameOver) {
+    backgroundMusic.play().catch(e => console.warn('Could not play music:', e));
   } else {
     backgroundMusic.pause();
   }
 });
-
-if (musicEnabled && !gameOver) {
-  backgroundMusic.play().catch(e => {
-    console.warn('Could not autoplay background music:', e);
-  });
-  musicStarted = true;
-}
 
 toggleShake.addEventListener('change', () => {
   shakeEnabled = toggleShake.checked;
