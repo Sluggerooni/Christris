@@ -2,6 +2,8 @@ html,
 body {
   height: 100%;
   margin: 0;
+
+
 }
 
 body {
@@ -10,6 +12,9 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 canvas {
@@ -363,3 +368,24 @@ width: 105%;
   background-color: rgb(17, 17, 17);
   color: white;
 }  
+
+#bg-upload{
+  background-color: #222;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+ width: 97.5%;
+  border: 2px solid #555;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+#bg-reset{
+  background-color: #222;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  width: 100%;
+  border: 2px solid #555;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  transform: translate(-6%, 0%);
+}

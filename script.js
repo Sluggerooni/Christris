@@ -802,17 +802,19 @@ toggleInfo.addEventListener('change', () => {
 });
 
 window.addEventListener('load', () => {
-  const holdVisible = localStorage.getItem('showHold') === 'true';
-  const nextVisible = localStorage.getItem('showNext') === 'true';
-  const infoVisible = localStorage.getItem('showInfo') === 'true';
+  // Always show info, next, and hold by default
+  toggleHold.checked = true;
+  toggleNext.checked = true;
+  toggleInfo.checked = true;
 
-  toggleHold.checked = holdVisible;
-  toggleNext.checked = nextVisible;
-  toggleInfo.checked = infoVisible;
+  document.getElementById('hold').style.display = 'flex';
+  document.getElementById('next').style.display = 'flex';
+  document.getElementById('info').style.display = 'flex';
 
-  document.getElementById('hold').style.display = holdVisible ? 'flex' : 'none';
-  document.getElementById('next').style.display = nextVisible ? 'flex' : 'none';
-  document.getElementById('info').style.display = infoVisible ? 'flex' : 'none';
+  // Optionally, update localStorage to reflect the default state
+  localStorage.setItem('showHold', true);
+  localStorage.setItem('showNext', true);
+  localStorage.setItem('showInfo', true);
 });
 
 rAF = requestAnimationFrame(loop);
@@ -1221,4 +1223,22 @@ window.addEventListener('load', () => {
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
   }
+});
+
+// Add this after your bg-upload input setup, or wherever you want the button to be created
+const bgResetBtn = document.createElement('button');
+bgResetBtn.textContent = 'Reset Background';
+bgResetBtn.id = 'bg-reset';
+bgResetBtn.style.marginLeft = '10px';
+
+// Insert the button after the bg-upload input
+const bgUploadInput = document.getElementById('bg-upload');
+if (bgUploadInput && bgUploadInput.parentNode) {
+  bgUploadInput.parentNode.insertBefore(bgResetBtn, bgUploadInput.nextSibling);
+}
+
+// Reset background handler
+bgResetBtn.addEventListener('click', () => {
+  document.body.style.backgroundImage = '';
+  localStorage.removeItem('customBg');
 });
